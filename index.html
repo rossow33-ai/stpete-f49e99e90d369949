@@ -72,7 +72,7 @@ textarea{min-height:44px;resize:vertical}
 
 <script src="Sortable.min.js"></script>
 <script>
-const BIN="https://extendsclass.com/api/json-storage/bin/eaafacd";
+const BIN="https://textdb.dev/api/data/stpete-c486ca4ae51d637c";
 const $=s=>document.querySelector(s);
 let state={items:[]}, open=new Set(), me=localStorage.getItem('who')||'', dragging=false, lastJson='';
 const CA={lat:27.7709,w:-82.75,e:-82.63};
@@ -84,8 +84,8 @@ function zurl(it){ if(it.addr){ const a=(it.addr+' Saint Petersburg FL '+(it.zip
   return 'https://www.zillow.com/homes/'+a+'_rb/'; } return 'https://www.zillow.com/homes/'+encodeURIComponent(it.mls)+'_rb/'; }
 function setDot(c){$('#dot').className=c}
 // ---- shared storage (read-modify-write so two people's edits merge) ----
-async function pull(){ const r=await fetch(BIN+'?_='+Date.now(),{cache:'no-store'}); if(!r.ok)throw 0; const t=await r.text(); return JSON.parse(t); }
-async function push(s){ const r=await fetch(BIN,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(s)}); if(!r.ok)throw 0; }
+async function pull(){ const r=await fetch(BIN+'?_='+Date.now(),{cache:'no-store'}); if(!r.ok)throw 0; const t=await r.text(); const o=JSON.parse(t); if(!o||!Array.isArray(o.items))throw 0; return o; }
+async function push(s){ const r=await fetch(BIN,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(s)}); if(!r.ok)throw 0; }
 let chain=Promise.resolve();
 function mutate(fn){ chain=chain.then(async()=>{ try{ const s=await pull(); if(!s.items)s.items=[]; fn(s); await push(s); state=s; localStorage.setItem('cache',JSON.stringify(s)); setDot('ok'); render(); }catch(e){ setDot('err'); toast('Could not save. Check connection.'); } }); return chain; }
 async function refresh(){ if(dragging||document.querySelector('.modal.show'))return; const ae=document.activeElement; if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT')&&ae.value)return;
