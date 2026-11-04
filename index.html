@@ -26,8 +26,10 @@ header h1{font-size:18px;margin:0;flex:1;min-width:0}
 #scrim{position:fixed;inset:0;z-index:20;display:none}#scrim.show{display:block}
 #list{padding:10px 10px calc(40px + env(safe-area-inset-bottom))}
 .item{background:var(--card);border-radius:12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.08);overflow:hidden}
-.bar{display:flex;align-items:center;min-height:62px;padding:6px 0 6px 10px;gap:10px}
+.bar{display:flex;align-items:center;min-height:62px;padding:6px 0 6px 10px;gap:9px}
 .rank{width:26px;height:26px;border-radius:50%;background:#e6f4f2;color:var(--acc);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.thumb{width:50px;height:50px;border-radius:10px;flex:none;background:#dbe3e8 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:22px;color:#9aa8b3;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .main{flex:1;min-width:0;cursor:pointer}
 .addr{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meta{font-size:13px;color:var(--mute);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -141,7 +143,7 @@ function notesHtml(it){ return (it.notes||[]).map((n,k)=>'<div class="note '+(n.
 function renderList(kind){ const L=$('#list'); let arr=state.items.filter(i=>st(i)===kind); if(kind==='discard')arr=arr.slice().reverse();
   if(!arr.length){ L.innerHTML='<div class="empty">'+(kind==='list'?'Nothing ranked yet. Swipe right on properties in Realtinder to add them here.':'Nothing discarded.')+'</div>'; return }
   L.innerHTML=arr.map((it,i)=>{ const mi=miles(it.lat,it.lon);
-   return '<div class="item'+(open.has(it.id)?' open':'')+'" data-id="'+esc(it.id)+'"><div class="bar">'+(kind==='list'?'<div class="rank">'+(i+1)+'</div>':'')+'<div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a> · <b>'+money(it.price)+'</b> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div></div>'+
+   return '<div class="item'+(open.has(it.id)?' open':'')+'" data-id="'+esc(it.id)+'"><div class="bar">'+(kind==='list'?'<div class="rank">'+(i+1)+'</div>':'')+'<div class="thumb">'+(it.img?'<img src="'+esc(it.img)+'" loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()">':'&#127968;')+'</div><div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a> · <b>'+money(it.price)+'</b> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div></div>'+
    (kind==='list'?'<div class="handle" aria-label="Drag to reorder">&#9776;</div>':'<button class="restore" data-restore aria-label="Restore to list">&#8617;</button>')+'</div>'+
    '<div class="detail">'+notesHtml(it)+'<textarea placeholder="Add a note as '+esc(me||'…')+'"></textarea><div class="row"><button class="btn" data-add-note style="flex:1">Add note</button><a class="btn g" href="'+zurl(it)+'" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Zillow</a></div>'+
    '<div class="lbl">Edit details · added by '+esc(it.by||'?')+'</div><div class="edit"><input data-f="addr" value="'+esc(it.addr)+'" placeholder="Address"><input data-f="zip" value="'+esc(it.zip)+'" placeholder="ZIP" inputmode="numeric"><input data-f="price" value="'+(it.price||'')+'" placeholder="Price" inputmode="numeric"></div>'+
