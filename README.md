@@ -55,3 +55,4 @@ Photo/price/sqft can come from the listing page (the app gets photos via `https:
 - Before any deploy, back up the live data: `curl -s "https://textdb.dev/api/data/\$(cat tdkey.txt)?_=\$RANDOM" -o backup-\$(date +%Y%m%d-%H%M%S).json` (backups are also kept in /workspace/stpete-backups/).
 - To change data (e.g. a daily job adding listings) do a read-modify-write that keeps every existing item, status, order and note exactly as is. Never POST a snapshot file.
 - A backup of the live state is `backup-*.json` in this folder; to restore, POST it back only if the user explicitly asks.
+- Icon: `icons/flamingo.svg` (source), PNGs in `icons/`, `favicon.ico`, `manifest.webmanifest`.
