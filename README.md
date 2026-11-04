@@ -58,3 +58,9 @@ Photo/price/sqft can come from the listing page (the app gets photos via `https:
 - Icon: `icons/flamingo.svg` (source), PNGs in `icons/`, `favicon.ico`, `manifest.webmanifest`.
 
 Notes sheet link buttons: Maps (Google Maps search by address), Zillow, OneHome. OneHome is invite-only (per-buyer token), so the button copies the MLS# and opens https://portal.onehome.com/. Icons: icons/app-*.png (App Store artwork).
+
+## New-listing badge
+An item shows an amber **New listing** badge (Realtinder card, and a small one on List/Discarded bars) when EITHER:
+- `isNew: true` is set on the item (set `isNew:false` or delete it to clear), OR
+- `listedDate` is an ISO date string (e.g. `"2026-11-04"`) within the last 7 days.
+Items without either field are never flagged (all existing items are unflagged). The app only reads these fields; it never writes them. The daily routine should set `isNew:true` (and optionally `listedDate`) when it prepends a new listing.

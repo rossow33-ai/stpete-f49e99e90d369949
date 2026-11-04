@@ -78,6 +78,7 @@ textarea{min-height:44px;resize:vertical}
 .dt{margin-top:12px}.dt summary{font-size:14px;color:var(--mute);padding:6px 0}
 .by{display:inline-block;font-size:10px;font-weight:700;line-height:1;padding:2px 6px;border-radius:8px;background:#e0f2f1;color:#0f766e;vertical-align:1px}
 .by-realtor{background:#fef3c7;color:#b45309}.by-bot{background:#ede9fe;color:#6d28d9}
+.newb{display:inline-block;background:#f59e0b;color:#fff;font-weight:800;border-radius:999px;font-size:12px;padding:4px 10px;letter-spacing:.2px;box-shadow:0 1px 4px rgba(0,0,0,.2)}.newb.sm{font-size:10px;padding:1px 6px;margin-right:6px;vertical-align:2px;box-shadow:none}.card .ng{position:absolute;top:14px;left:14px}
 .card .tg{position:absolute;top:14px;right:14px}.card .tg .by{font-size:12px;padding:4px 9px;box-shadow:0 1px 4px rgba(0,0,0,.2)}
 .note.bot{border-left:3px solid #7c3aed}
 .empty{text-align:center;color:var(--mute);padding:50px 24px}
@@ -140,6 +141,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const money=p=>p?'$'+Number(p).toLocaleString('en-US'):'price ?';
 const st=it=>it.status||'list';
 function zslug(it){ return (it.addr+' Saint Petersburg FL '+(it.zip||'')).trim().replace(/[^A-Za-z0-9 ]/g,'').replace(/\s+/g,'-'); }
+function isNew(it){ if(it.isNew===true)return true; if(it.isNew===false||!it.listedDate)return false; const t=Date.parse(it.listedDate); return !isNaN(t)&&Date.now()-t>=-864e5&&Date.now()-t<=7*864e5; }
+function newB(it,sm){ return isNew(it)?'<span class="newb'+(sm?' sm':'')+'">New listing</span>':''; }
 function zurl(it){ return it.addr?'https://www.zillow.com/homes/'+zslug(it)+'_rb/':'https://www.zillow.com/homes/'+encodeURIComponent(it.mls)+'_rb/'; }
 function setDot(c){$('#dot').className=c}
 // ---- shared storage (read-modify-write so two people's edits merge) ----
@@ -171,7 +174,7 @@ function notesHtml(it){ return (it.notes||[]).map((n,k)=>'<div class="note '+(n.
 function renderList(kind){ const L=$('#list'); let arr=state.items.filter(i=>st(i)===kind); 
   if(!arr.length){ L.innerHTML='<div class="empty">'+(kind==='list'?'Nothing ranked yet. Swipe right on properties in Realtinder to add them here.':'Nothing discarded.')+'</div>'; return }
   L.innerHTML=arr.map((it,i)=>{ const mi=miles(it.lat,it.lon);
-   return '<div class="item" data-id="'+esc(it.id)+'"><div class="bar">'+'<div class="rank">'+(i+1)+'</div>'+'<div class="thumb">'+(it.img?'<img src="'+esc(it.img)+'" loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()">':'&#127968;')+'</div><div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a>&thinsp;·&thinsp;<b>'+money(it.price)+'</b>'+(psfTxt(it)?'&thinsp;·&thinsp;'+psfTxt(it):'')+'&thinsp;·&thinsp;'+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div>'+lastNote(it)+'</div>'+
+   return '<div class="item" data-id="'+esc(it.id)+'"><div class="bar">'+'<div class="rank">'+(i+1)+'</div>'+'<div class="thumb">'+(it.img?'<img src="'+esc(it.img)+'" loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()">':'&#127968;')+'</div><div class="main"><div class="addr">'+newB(it,1)+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a>&thinsp;·&thinsp;<b>'+money(it.price)+'</b>'+(psfTxt(it)?'&thinsp;·&thinsp;'+psfTxt(it):'')+'&thinsp;·&thinsp;'+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div>'+lastNote(it)+'</div>'+
    '<div class="handle" aria-label="Drag to reorder">&#9776;</div></div></div>'; }).join('');
   initSort(kind); }
 let sortable;
@@ -209,7 +212,7 @@ function renderTinder(){ const T=$('#tinder'); const q=state.items.filter(i=>st(
   const cur=q.find(x=>x.id===curId)||q[0]; if(cur)curId=cur.id; const rest=q.filter(x=>x!==cur);
   if(!q.length){ T.innerHTML='<div class="empty" style="margin:auto">You\'re all caught up.<br><br>Use the menu &rarr; <b>Add MLS number</b> to add a new property.</div>'; return }
   const card=(it,back)=>{ const mi=miles(it.lat,it.lon); const nt=(it.notes||[]).map(n=>n.by+': '+n.text).join(' · ');
-   return '<div class="card'+(back?' back':'')+'" data-id="'+esc(it.id)+'"><div class="photo"'+(it.img?' style="background-image:url(\''+esc(it.img)+'\')"':'')+'>'+(it.img?'':'<div class="ph">&#127968;</div>')+'<div class="tg">'+tag(it.by)+'</div><div class="stamp k">LIST</div><div class="stamp l">NOPE</div></div><div class="info"><div class="p">'+money(it.price)+'</div><div class="a">'+esc(it.addr||'Address not added')+'</div><div class="m"><a class="z" href="'+zurl(it)+'" target="_blank" rel="noopener">'+esc(it.mls)+' on Zillow &#8599;</a> · '+(psfTxt(it)?psfTxt(it)+' · ':'')+(mi==null?'? mi':mi.toFixed(1)+' mi')+' from Central Ave</div>'+(nt?'<div class="nt">'+esc(nt)+'</div>':'')+'<div class="m" style="font-size:12px">Added by '+esc(it.by||'?')+'</div></div></div>'; };
+   return '<div class="card'+(back?' back':'')+'" data-id="'+esc(it.id)+'"><div class="photo"'+(it.img?' style="background-image:url(\''+esc(it.img)+'\')"':'')+'>'+(it.img?'':'<div class="ph">&#127968;</div>')+'<div class="tg">'+tag(it.by)+'</div>'+(isNew(it)?'<div class="ng">'+newB(it)+'</div>':'')+'<div class="stamp k">LIST</div><div class="stamp l">NOPE</div></div><div class="info"><div class="p">'+money(it.price)+'</div><div class="a">'+esc(it.addr||'Address not added')+'</div><div class="m"><a class="z" href="'+zurl(it)+'" target="_blank" rel="noopener">'+esc(it.mls)+' on Zillow &#8599;</a> · '+(psfTxt(it)?psfTxt(it)+' · ':'')+(mi==null?'? mi':mi.toFixed(1)+' mi')+' from Central Ave</div>'+(nt?'<div class="nt">'+esc(nt)+'</div>':'')+'<div class="m" style="font-size:12px">Added by '+esc(it.by||'?')+'</div></div></div>'; };
   T.innerHTML='<div class="deck">'+(rest[0]?card(rest[0],true):'')+card(cur,false)+'</div><div class="acts"><button class="no" id="bNo" aria-label="Discard">&#10005;</button><button class="cm" id="bNote" aria-label="Notes">&#128172;<i>'+((cur.notes||[]).length||'')+'</i></button><button class="yes" id="bYes" aria-label="Add to list">&#9829;</button></div><div class="cnt">'+q.length+' left to sort</div>';
   const el=T.querySelector('.card:not(.back)'); attachSwipe(el,cur.id); $('#bNote').onclick=()=>openNotes(cur.id); $('#bNo').onclick=()=>fling(el,cur.id,-1); $('#bYes').onclick=()=>fling(el,cur.id,1); }
 function decide(id,dir){ curId=null; const back=()=>{curId=id}; if(dir>0){ mutate(s=>setStatus(s,id,'list')); toast('Added to bottom of your list',()=>{back();mutate(s=>setStatus(s,id,'queue'))}); } else { mutate(s=>setStatus(s,id,'discard')); toast('Discarded',()=>{back();mutate(s=>{const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); m.status='queue'; s.items.unshift(m)})}); } }
