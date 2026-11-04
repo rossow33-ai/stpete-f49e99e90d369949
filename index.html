@@ -32,7 +32,7 @@ header h1{font-size:18px;margin:0;flex:1;min-width:0}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .main{flex:1;min-width:0;cursor:pointer}
 .addr{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta{font-size:13px;color:var(--mute);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:12.5px;line-height:1.3;color:var(--mute);margin-top:2px;overflow:hidden;max-height:2.7em}
 .meta a,a.z{color:var(--acc);font-weight:600;text-decoration:underline;padding:4px 0}
 .meta b{color:var(--ink)}
 .handle{width:56px;align-self:stretch;display:flex;align-items:center;justify-content:center;font-size:28px;color:#8a97a3;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;flex:none}
@@ -50,7 +50,7 @@ textarea,input{width:100%;font:inherit;padding:9px 10px;border:1px solid #cfd7de
 textarea{min-height:44px;resize:vertical}
 .btn{border:0;border-radius:10px;padding:10px 14px;font-size:15px;font-weight:600;background:var(--acc);color:#fff;white-space:nowrap}
 .btn.g{background:#e6ebef;color:var(--ink)}.btn.r{background:#fee2e2;color:#b91c1c}
-.edit{display:grid;grid-template-columns:1fr 90px 110px;gap:6px;margin-top:10px}
+.edit{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}.edit [data-f=addr]{grid-column:1/-1}
 .lbl{font-size:12px;color:var(--mute);margin:10px 0 4px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:40}
 .modal.show{display:flex}
@@ -59,6 +59,16 @@ textarea{min-height:44px;resize:vertical}
 .sheet input{margin-bottom:8px}
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#14202b;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;display:none;z-index:50;gap:12px;align-items:center;max-width:92vw}
 #toast button{background:none;border:0;color:#7dd3c8;font-weight:700;font-size:14px}
+.acts .cm{color:#2563eb;position:relative;width:56px;height:56px;margin-top:6px;font-size:26px}.acts .cm i{position:absolute;top:-2px;right:-2px;background:#2563eb;color:#fff;font:700 11px/1 system-ui;border-radius:9px;padding:3px 6px;min-width:10px}.acts .cm i:empty{display:none}
+#notesM .sheet{max-height:88dvh;overflow:auto;-webkit-overflow-scrolling:touch}
+.nh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}.nh .a{font-size:18px;font-weight:700}.nh .m{font-size:13px;color:var(--mute);margin-top:2px}.nh a{color:var(--acc)}
+.nh .x{border:0;background:#e6ebef;border-radius:50%;width:34px;height:34px;font-size:15px;flex:none}
+.nl{max-height:38dvh;overflow:auto;margin-bottom:8px}.nc{color:#2563eb;font-weight:600}
+.dt{margin-top:12px}.dt summary{font-size:14px;color:var(--mute);padding:6px 0}
+.by{display:inline-block;font-size:10px;font-weight:700;line-height:1;padding:2px 6px;border-radius:8px;background:#e0f2f1;color:#0f766e;vertical-align:1px}
+.by-realtor{background:#fef3c7;color:#b45309}.by-bot{background:#ede9fe;color:#6d28d9}
+.card .tg{position:absolute;top:14px;right:14px}.card .tg .by{font-size:12px;padding:4px 9px;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.note.bot{border-left:3px solid #7c3aed}
 .empty{text-align:center;color:var(--mute);padding:50px 24px}
 /* Realtinder */
 #tinder{display:none;padding:10px 12px calc(14px + env(safe-area-inset-bottom));flex-direction:column;height:calc(100dvh - 60px - env(safe-area-inset-top))}
@@ -95,10 +105,11 @@ textarea{min-height:44px;resize:vertical}
 <h2>Add property</h2>
 <input id="aMls" placeholder="MLS number (e.g. TB8557907)" autocapitalize="characters" autocomplete="off">
 <input id="aAddr" placeholder="Street address (e.g. 123 4th Ave S)" autocomplete="off">
-<div class="row" style="margin-top:0"><input id="aZip" placeholder="ZIP" inputmode="numeric" style="flex:1"><input id="aPrice" placeholder="Price (optional)" inputmode="numeric" style="flex:1.4"></div>
+<div class="row" style="margin-top:0"><input id="aZip" placeholder="ZIP" inputmode="numeric" style="flex:1"><input id="aPrice" placeholder="Price (optional)" inputmode="numeric" style="flex:1.4"><input id="aSqft" placeholder="Sq ft" inputmode="numeric" style="flex:1"></div>
 <div class="lbl">Add the street address and I'll look up the photo, price and miles from Central Ave. It goes to the front of Realtinder.</div>
 <div class="row"><button class="btn g" id="aCancel" style="flex:1">Cancel</button><button class="btn" id="aSave" style="flex:2">Add to Realtinder</button></div>
 </div></div>
+<div class="modal" id="notesM"><div class="sheet"></div></div>
 <div class="modal" id="whoM"><div class="sheet">
 <h2>Who's this?</h2>
 <div class="lbl" style="margin-top:0">Shown next to what you add and the notes you write.</div>
@@ -126,73 +137,88 @@ async function push(s){ const r=await fetch(BIN,{method:'POST',headers:{'Content
 let chain=Promise.resolve();
 function mutate(fn){ try{fn(state)}catch(e){} render(); pending++;
   chain=chain.then(async()=>{ try{ const s=await pull(); fn(s); await push(s); state=s; localStorage.setItem('cache',JSON.stringify(s)); setDot('ok'); }catch(e){ setDot('err'); toast('Could not save. Check connection.'); } finally{ pending--; if(!pending)render(); } }); return chain; }
-async function refresh(){ if(dragging||pending||document.querySelector('.modal.show'))return; const ae=document.activeElement; if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT')&&ae.value)return;
+async function refresh(){ if(dragging||swiping||flinging||pending||document.querySelector('.modal.show:not(#notesM)'))return; const ae=document.activeElement; if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT')&&ae.value)return;
   try{ const s=await pull(); setDot('ok'); const j=JSON.stringify(s); if(j!==lastJson){ state=s; localStorage.setItem('cache',j); render(); } }catch(e){ setDot('err'); } }
 // ---- views ----
 const TITLES={list:'My Ranking',discard:'Discarded',tinder:'Realtinder'};
-function render(){ lastJson=JSON.stringify(state);
+function render(){ lastJson=JSON.stringify(state); if(notesId)renderNotes();
   const c=k=>state.items.filter(i=>st(i)===k).length;
   $('#nList').textContent=c('list'); $('#nDis').textContent=c('discard'); $('#nQ').textContent=c('queue');
   const q=c('queue'); $('#qBadge').style.display=q?'':'none'; $('#qBadge').textContent=q;
   document.querySelectorAll('#menu button[data-v]').forEach(b=>b.classList.toggle('cur',b.dataset.v===view));
   $('#title').firstChild.textContent=TITLES[view]||'';
-  $('#sub').textContent=view==='list'?'Drag ≡ to rank · miles from Central Ave':view==='discard'?'Drag ≡ to rank · open one to restore it':'Swipe right = list · left = discard';
+  $('#sub').textContent=view==='list'?'Drag ≡ to rank · tap a bar for notes':view==='discard'?'Drag ≡ to rank · tap a bar for notes':'Swipe right = list · left = discard';
   $('#list').style.display=view==='tinder'?'none':''; $('#tinder').style.display=view==='tinder'?'flex':'none';
   if(view==='tinder')renderTinder(); else renderList(view==='discard'?'discard':'list'); }
-function notesHtml(it){ return (it.notes||[]).map((n,k)=>'<div class="note '+(n.by==='Realtor'?'realtor':'tom')+'">'+esc(n.text)+'<small>'+esc(n.by)+(n.ts?' · '+new Date(n.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+(n.by===me?'<button data-del-note="'+k+'">remove</button>':'')+'</small></div>').join(''); }
+function ppsf(it){ return it.price&&it.sqft?Math.round(it.price/it.sqft):null }
+function psfTxt(it){ const v=ppsf(it); return v?'$'+v.toLocaleString('en-US')+'/sf':'' }
+function tag(by){ by=by||'?'; return '<span class="by by-'+esc(by.toLowerCase())+'">'+esc(by)+'</span>' }
+let curId=null, swiping=false;
+function notesHtml(it){ return (it.notes||[]).map((n,k)=>'<div class="note '+(n.by==='Realtor'?'realtor':n.by==='Bot'?'bot':'tom')+'">'+esc(n.text)+'<small>'+esc(n.by)+(n.ts?' · '+new Date(n.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+(n.by===me?'<button data-del-note="'+k+'">remove</button>':'')+'</small></div>').join(''); }
 function renderList(kind){ const L=$('#list'); let arr=state.items.filter(i=>st(i)===kind); 
   if(!arr.length){ L.innerHTML='<div class="empty">'+(kind==='list'?'Nothing ranked yet. Swipe right on properties in Realtinder to add them here.':'Nothing discarded.')+'</div>'; return }
   L.innerHTML=arr.map((it,i)=>{ const mi=miles(it.lat,it.lon);
-   return '<div class="item'+(open.has(it.id)?' open':'')+'" data-id="'+esc(it.id)+'"><div class="bar">'+'<div class="rank">'+(i+1)+'</div>'+'<div class="thumb">'+(it.img?'<img src="'+esc(it.img)+'" loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()">':'&#127968;')+'</div><div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a> · <b>'+money(it.price)+'</b> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div></div>'+
-   '<div class="handle" aria-label="Drag to reorder">&#9776;</div>'+'</div>'+
-   '<div class="detail">'+notesHtml(it)+'<textarea placeholder="Add a note as '+esc(me||'…')+'"></textarea><div class="row"><button class="btn" data-add-note style="flex:1">Add note</button><a class="btn g" href="'+zurl(it)+'" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Zillow</a></div>'+
-   '<div class="lbl">Edit details · added by '+esc(it.by||'?')+'</div><div class="edit"><input data-f="addr" value="'+esc(it.addr)+'" placeholder="Address"><input data-f="zip" value="'+esc(it.zip)+'" placeholder="ZIP" inputmode="numeric"><input data-f="price" value="'+(it.price||'')+'" placeholder="Price" inputmode="numeric"></div>'+
-   '<div class="row"><button class="btn g" data-save style="flex:1">Save details</button>'+(kind==='list'?'<button class="btn g" data-discard>Discard</button>':'<button class="btn" data-restore>Restore to list</button>')+'<button class="btn r" data-del>Delete</button></div></div></div>'; }).join('');
+   return '<div class="item" data-id="'+esc(it.id)+'"><div class="bar">'+'<div class="rank">'+(i+1)+'</div>'+'<div class="thumb">'+(it.img?'<img src="'+esc(it.img)+'" loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()">':'&#127968;')+'</div><div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a> · <b>'+money(it.price)+'</b>'+(psfTxt(it)?' · '+psfTxt(it):'')+' · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+' · '+tag(it.by)+((it.notes||[]).length?' · <span class="nc">&#128172; '+it.notes.length+'</span>':'')+'</div></div>'+
+   '<div class="handle" aria-label="Drag to reorder">&#9776;</div></div></div>'; }).join('');
   initSort(kind); }
 let sortable;
 function initSort(kind){ if(sortable)sortable.destroy(); sortable=new Sortable($('#list'),{handle:'.handle',animation:150,ghostClass:'sortable-ghost',chosenClass:'sortable-chosen',
   onStart(){dragging=true}, onEnd(e){ dragging=false; if(e.oldIndex===e.newIndex)return; const el=e.item, id=el.dataset.id, prev=el.previousElementSibling?el.previousElementSibling.dataset.id:null;
    mutate(s=>{ const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); let j; if(prev){j=s.items.findIndex(x=>x.id===prev)+1}else{j=s.items.findIndex(x=>st(x)===kind); if(j<0)j=s.items.length} s.items.splice(j,0,m); }); } }); }
 function setStatus(s,id,status){ const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); m.status=status; s.items.push(m); }
-$('#list').addEventListener('click',e=>{ const t=e.target; if(t.closest('[data-z]'))return; const el=t.closest('.item'); if(!el)return; const id=el.dataset.id, it=state.items.find(x=>x.id===id); if(!it)return;
-  if(t.closest('[data-restore]')){ mutate(s=>setStatus(s,id,'list')); toast('Back on the list (bottom)'); return; }
-  if(t.closest('[data-discard]')){ mutate(s=>setStatus(s,id,'discard')); toast('Discarded',()=>mutate(s=>setStatus(s,id,'list'))); return; }
-  if(t.closest('[data-add-note]')){ const ta=el.querySelector('textarea'); const v=ta.value.trim(); if(!v)return; ta.value=''; const note={by:me,text:v,ts:Date.now()}; open.add(id); mutate(s=>{const x=s.items.find(z=>z.id===id); if(x){(x.notes=x.notes||[]).push(note)}}); return; }
+$('#list').addEventListener('click',e=>{ const t=e.target; if(t.closest('[data-z]')||t.closest('.handle'))return; const el=t.closest('.item'); if(el)openNotes(el.dataset.id); });
+// ---- notes sheet ----
+let notesId=null;
+function renderNotes(){ const it=state.items.find(x=>x.id===notesId); const M=$('#notesM'); if(!it){M.classList.remove('show');notesId=null;return}
+  const ta=M.querySelector('textarea'), keep=ta?ta.value:'', hadFocus=ta&&document.activeElement===ta, kind=st(it);
+  M.querySelector('.sheet').innerHTML='<div class="nh"><div><div class="a">'+esc(it.addr||'Address not added')+'</div><div class="m"><a href="'+zurl(it)+'" target="_blank" rel="noopener">'+esc(it.mls)+' on Zillow &#8599;</a> · '+money(it.price)+(psfTxt(it)?' · '+psfTxt(it):'')+' · '+tag(it.by)+'</div></div><button class="x" data-close aria-label="Close">&#10005;</button></div>'+
+   '<div class="nl">'+((it.notes||[]).length?notesHtml(it):'<div class="lbl" style="margin:6px 0">No notes yet.</div>')+'</div>'+
+   '<textarea id="nTa" placeholder="Add a note as '+esc(me||'…')+'"></textarea><button class="btn" data-add-note style="width:100%;margin-top:6px">Add note</button>'+
+   '<details class="dt"><summary>Details &amp; actions</summary><div class="lbl">Added by '+esc(it.by||'?')+'</div><div class="edit"><input data-f="addr" value="'+esc(it.addr)+'" placeholder="Address"><input data-f="zip" value="'+esc(it.zip)+'" placeholder="ZIP" inputmode="numeric"><input data-f="price" value="'+(it.price||'')+'" placeholder="Price" inputmode="numeric"><input data-f="sqft" value="'+(it.sqft||'')+'" placeholder="Sq ft" inputmode="numeric"></div>'+
+   '<div class="row"><button class="btn g" data-save style="flex:1">Save details</button>'+(kind==='list'?'<button class="btn g" data-discard>Discard</button>':kind==='discard'?'<button class="btn" data-restore>Restore to list</button>':'')+'<button class="btn r" data-del>Delete</button></div></details>';
+  const n=M.querySelector('#nTa'); n.value=keep; if(hadFocus)n.focus(); const nl=M.querySelector('.nl'); nl.scrollTop=nl.scrollHeight; }
+function openNotes(id){ notesId=id; $('#notesM').classList.add('show'); renderNotes(); }
+function closeNotes(){ $('#notesM').classList.remove('show'); notesId=null; }
+$('#notesM').addEventListener('click',e=>{ const t=e.target, M=$('#notesM'); if(t===M||t.closest('[data-close]')){closeNotes();return}
+  const id=notesId, it=state.items.find(x=>x.id===id); if(!it)return;
+  if(t.closest('[data-add-note]')){ const ta=M.querySelector('#nTa'); const v=ta.value.trim(); if(!v)return; ta.value=''; const note={by:me,text:v,ts:Date.now()}; mutate(s=>{const x=s.items.find(z=>z.id===id); if(x){(x.notes=x.notes||[]).push(note)}}); return; }
   if(t.closest('[data-del-note]')){ const k=+t.closest('[data-del-note]').dataset.delNote, n=it.notes[k]; mutate(s=>{const x=s.items.find(z=>z.id===id); if(x)x.notes=(x.notes||[]).filter(q=>!(q.ts===n.ts&&q.text===n.text&&q.by===n.by))}); return; }
-  if(t.closest('[data-del]')){ if(!confirm('Delete '+(it.addr||it.mls)+' permanently?'))return; const idx=state.items.indexOf(it), copy=JSON.parse(JSON.stringify(it)); mutate(s=>{s.items=s.items.filter(z=>z.id!==id)}); toast('Deleted',()=>mutate(s=>{ if(!s.items.some(z=>z.id===id)) s.items.splice(Math.min(idx,s.items.length),0,copy)})); return; }
-  if(t.closest('[data-save]')){ const g=f=>el.querySelector('[data-f='+f+']').value.trim(); saveDetails(id,g('addr'),g('zip'),parseInt(g('price').replace(/\D/g,''))||null); return; }
-  if(t.closest('.main')){ open.has(id)?open.delete(id):open.add(id); el.classList.toggle('open'); } });
+  if(t.closest('[data-restore]')){ closeNotes(); mutate(s=>setStatus(s,id,'list')); toast('Back on the list (bottom)'); return; }
+  if(t.closest('[data-discard]')){ closeNotes(); mutate(s=>setStatus(s,id,'discard')); toast('Discarded',()=>mutate(s=>setStatus(s,id,'list'))); return; }
+  if(t.closest('[data-del]')){ if(!confirm('Delete '+(it.addr||it.mls)+' permanently?'))return; closeNotes(); const idx=state.items.indexOf(it), copy=JSON.parse(JSON.stringify(it)); mutate(s=>{s.items=s.items.filter(z=>z.id!==id)}); toast('Deleted',()=>mutate(s=>{ if(!s.items.some(z=>z.id===id)) s.items.splice(Math.min(idx,s.items.length),0,copy)})); return; }
+  if(t.closest('[data-save]')){ const g=f=>M.querySelector('[data-f='+f+']').value.trim(); saveDetails(id,g('addr'),g('zip'),parseInt(g('price').replace(/\D/g,''))||null,parseInt(g('sqft').replace(/\D/g,''))||null); return; } });
 // ---- Realtinder ----
 function renderTinder(){ const T=$('#tinder'); const q=state.items.filter(i=>st(i)==='queue');
+  const cur=q.find(x=>x.id===curId)||q[0]; if(cur)curId=cur.id; const rest=q.filter(x=>x!==cur);
   if(!q.length){ T.innerHTML='<div class="empty" style="margin:auto">You\'re all caught up.<br><br>Use the menu &rarr; <b>Add MLS number</b> to add a new property.</div>'; return }
   const card=(it,back)=>{ const mi=miles(it.lat,it.lon); const nt=(it.notes||[]).map(n=>n.by+': '+n.text).join(' · ');
-   return '<div class="card'+(back?' back':'')+'" data-id="'+esc(it.id)+'"><div class="photo"'+(it.img?' style="background-image:url(\''+esc(it.img)+'\')"':'')+'>'+(it.img?'':'<div class="ph">&#127968;</div>')+'<div class="stamp k">LIST</div><div class="stamp l">NOPE</div></div><div class="info"><div class="p">'+money(it.price)+'</div><div class="a">'+esc(it.addr||'Address not added')+'</div><div class="m"><a class="z" href="'+zurl(it)+'" target="_blank" rel="noopener">'+esc(it.mls)+' on Zillow &#8599;</a> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+' from Central Ave</div>'+(nt?'<div class="nt">'+esc(nt)+'</div>':'')+'<div class="m" style="font-size:12px">Added by '+esc(it.by||'?')+'</div></div></div>'; };
-  T.innerHTML='<div class="deck">'+(q[1]?card(q[1],true):'')+card(q[0],false)+'</div><div class="acts"><button class="no" id="bNo" aria-label="Discard">&#10005;</button><button class="yes" id="bYes" aria-label="Add to list">&#9829;</button></div><div class="cnt">'+q.length+' left to sort</div>';
-  const el=T.querySelector('.card:not(.back)'); attachSwipe(el,q[0].id); $('#bNo').onclick=()=>fling(el,q[0].id,-1); $('#bYes').onclick=()=>fling(el,q[0].id,1); }
-function decide(id,dir){ if(dir>0){ mutate(s=>setStatus(s,id,'list')); toast('Added to bottom of your list',()=>mutate(s=>setStatus(s,id,'queue'))); } else { mutate(s=>setStatus(s,id,'discard')); toast('Discarded',()=>mutate(s=>{const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); m.status='queue'; s.items.unshift(m)})); } }
+   return '<div class="card'+(back?' back':'')+'" data-id="'+esc(it.id)+'"><div class="photo"'+(it.img?' style="background-image:url(\''+esc(it.img)+'\')"':'')+'>'+(it.img?'':'<div class="ph">&#127968;</div>')+'<div class="tg">'+tag(it.by)+'</div><div class="stamp k">LIST</div><div class="stamp l">NOPE</div></div><div class="info"><div class="p">'+money(it.price)+'</div><div class="a">'+esc(it.addr||'Address not added')+'</div><div class="m"><a class="z" href="'+zurl(it)+'" target="_blank" rel="noopener">'+esc(it.mls)+' on Zillow &#8599;</a> · '+(psfTxt(it)?psfTxt(it)+' · ':'')+(mi==null?'? mi':mi.toFixed(1)+' mi')+' from Central Ave</div>'+(nt?'<div class="nt">'+esc(nt)+'</div>':'')+'<div class="m" style="font-size:12px">Added by '+esc(it.by||'?')+'</div></div></div>'; };
+  T.innerHTML='<div class="deck">'+(rest[0]?card(rest[0],true):'')+card(cur,false)+'</div><div class="acts"><button class="no" id="bNo" aria-label="Discard">&#10005;</button><button class="cm" id="bNote" aria-label="Notes">&#128172;<i>'+((cur.notes||[]).length||'')+'</i></button><button class="yes" id="bYes" aria-label="Add to list">&#9829;</button></div><div class="cnt">'+q.length+' left to sort</div>';
+  const el=T.querySelector('.card:not(.back)'); attachSwipe(el,cur.id); $('#bNote').onclick=()=>openNotes(cur.id); $('#bNo').onclick=()=>fling(el,cur.id,-1); $('#bYes').onclick=()=>fling(el,cur.id,1); }
+function decide(id,dir){ curId=null; const back=()=>{curId=id}; if(dir>0){ mutate(s=>setStatus(s,id,'list')); toast('Added to bottom of your list',()=>{back();mutate(s=>setStatus(s,id,'queue'))}); } else { mutate(s=>setStatus(s,id,'discard')); toast('Discarded',()=>{back();mutate(s=>{const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); m.status='queue'; s.items.unshift(m)})}); } }
 let flinging=false;
 function fling(el,id,dir){ if(flinging)return; flinging=true; el.style.transition='transform .28s ease-out,opacity .28s'; el.style.transform='translateX('+(dir*window.innerWidth*1.2)+'px) rotate('+(dir*25)+'deg)'; el.style.opacity='.2'; setTimeout(()=>{flinging=false; decide(id,dir)},260); }
 function attachSwipe(el,id){ let sx=0,sy=0,dx=0,on=false,moved=false; const k=el.querySelector('.stamp.k'), l=el.querySelector('.stamp.l');
-  el.addEventListener('pointerdown',e=>{ if(e.target.closest('a'))return; on=true;moved=false;sx=e.clientX;sy=e.clientY;dx=0; el.style.transition='none'; el.setPointerCapture(e.pointerId); });
+  el.addEventListener('pointerdown',e=>{ if(e.target.closest('a'))return; on=true;swiping=true;moved=false;sx=e.clientX;sy=e.clientY;dx=0; el.style.transition='none'; el.setPointerCapture(e.pointerId); });
   el.addEventListener('pointermove',e=>{ if(!on)return; dx=e.clientX-sx; if(Math.abs(dx)>6)moved=true; el.style.transform='translateX('+dx+'px) rotate('+(dx/18)+'deg)'; k.style.opacity=Math.max(0,Math.min(1,dx/100)); l.style.opacity=Math.max(0,Math.min(1,-dx/100)); });
-  const end=()=>{ if(!on)return; on=false; if(Math.abs(dx)>100){ fling(el,id,dx>0?1:-1) } else { el.style.transition='transform .2s'; el.style.transform=''; k.style.opacity=0; l.style.opacity=0; } };
+  const end=()=>{ if(!on)return; on=false; swiping=false; if(Math.abs(dx)>100){ fling(el,id,dx>0?1:-1) } else { el.style.transition='transform .2s'; el.style.transform=''; k.style.opacity=0; l.style.opacity=0; } };
   el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end); }
 // ---- add / enrich ----
 async function geocode(addr,zip){ if(!addr)return null; try{ const q=encodeURIComponent(addr+', Saint Petersburg, FL '+(zip||'')); const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q='+q); const j=await r.json(); if(j[0])return{lat:+j[0].lat,lon:+j[0].lon}; }catch(e){} return null; }
 async function enrich(addr,zip){ if(!addr)return {}; try{ const ctl=new AbortController(); setTimeout(()=>ctl.abort(),20000); const r=await fetch('https://r.jina.ai/'+zurl({addr,zip,mls:''}),{signal:ctl.signal}); const t=await r.text(); const out={};
   let m=t.match(/1st image of [^\]]*\]\((https:\/\/photos\.zillowstatic\.com\/[^)\s]+)\)/)||t.match(/\]\((https:\/\/photos\.zillowstatic\.com\/fp\/[^)\s]*-(?:cc_ft_960|sr_576_384|sc_1152_768)\.jpg)\)/); if(m)out.img=m[1];
   m=t.match(/^\$([\d,]+)\s*$/m); if(m)out.price=parseInt(m[1].replace(/,/g,'')); m=t.match(/MLS#:\s*([A-Z]*\d+)/); if(m)out.mls=m[1]; return out; }catch(e){return {}} }
-async function saveDetails(id,addr,zip,price){ const cur=state.items.find(x=>x.id===id); let c=null,en={}; if(addr&&(addr!==cur.addr||zip!==cur.zip||cur.lat==null||!cur.img)){ toast('Looking up address…'); [c,en]=await Promise.all([geocode(addr,zip),enrich(addr,zip)]); if(!c)toast('Saved, but could not locate address for miles'); }
-  mutate(s=>{const x=s.items.find(z=>z.id===id); if(!x)return; x.addr=addr; x.zip=zip; x.price=price||x.price||en.price||null; if(c){x.lat=c.lat;x.lon=c.lon} if(en.img)x.img=en.img; }); }
-function openAdd(){ ['aMls','aAddr','aZip','aPrice'].forEach(i=>$('#'+i).value=''); $('#addM').classList.add('show'); setTimeout(()=>$('#aMls').focus(),50); }
+async function saveDetails(id,addr,zip,price,sqft){ const cur=state.items.find(x=>x.id===id); let c=null,en={}; if(addr&&(addr!==cur.addr||zip!==cur.zip||cur.lat==null||!cur.img)){ toast('Looking up address…'); [c,en]=await Promise.all([geocode(addr,zip),enrich(addr,zip)]); if(!c)toast('Saved, but could not locate address for miles'); }
+  mutate(s=>{const x=s.items.find(z=>z.id===id); if(!x)return; x.addr=addr; x.zip=zip; x.price=price||x.price||en.price||null; x.sqft=sqft||null; if(c){x.lat=c.lat;x.lon=c.lon} if(en.img)x.img=en.img; }); }
+function openAdd(){ ['aMls','aAddr','aZip','aPrice','aSqft'].forEach(i=>$('#'+i).value=''); $('#addM').classList.add('show'); setTimeout(()=>$('#aMls').focus(),50); }
 $('#aCancel').onclick=()=>$('#addM').classList.remove('show');
 $('#addM').onclick=e=>{ if(e.target.id==='addM')$('#addM').classList.remove('show') };
 $('#aSave').onclick=async()=>{ let mls=$('#aMls').value.trim().toUpperCase().replace(/\s+/g,''); if(!mls){$('#aMls').focus();return}
   if(state.items.some(x=>x.mls===mls)){toast('Already on the list');return}
   const addr=$('#aAddr').value.trim(), zip=$('#aZip').value.trim(); let price=parseInt($('#aPrice').value.replace(/\D/g,''))||null;
   $('#aSave').disabled=true; $('#aSave').textContent='Looking up…'; const [c,en]=await Promise.all([geocode(addr,zip),enrich(addr,zip)]); $('#aSave').disabled=false; $('#aSave').textContent='Add to Realtinder'; $('#addM').classList.remove('show');
-  const it={id:mls+'-'+Math.random().toString(36).slice(2,6),mls,addr,zip,price:price||en.price||null,lat:c?c.lat:null,lon:c?c.lon:null,img:en.img||'',by:me,status:'queue',notes:[]};
-  await mutate(s=>{ if(!s.items.some(x=>x.mls===mls)) s.items.unshift(it) }); setView('tinder'); toast(addr?(c?'Added to the front of Realtinder':'Added. Could not locate address for miles.'):'Added. Add the street address to get a photo and miles.'); };
+  const it={id:mls+'-'+Math.random().toString(36).slice(2,6),mls,addr,zip,price:price||en.price||null,sqft:parseInt($('#aSqft').value.replace(/\D/g,''))||null,lat:c?c.lat:null,lon:c?c.lon:null,img:en.img||'',by:me,status:'queue',notes:[]};
+  curId=null; await mutate(s=>{ if(!s.items.some(x=>x.mls===mls)) s.items.unshift(it) }); setView('tinder'); toast(addr?(c?'Added to the front of Realtinder':'Added. Could not locate address for miles.'):'Added. Add the street address to get a photo and miles.'); };
 // ---- menu / identity ----
 function setView(v){ view=v; localStorage.setItem('view',v); closeMenu(); render(); window.scrollTo(0,0); }
 function closeMenu(){ $('#menu').classList.remove('show'); $('#scrim').classList.remove('show'); }
