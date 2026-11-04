@@ -72,6 +72,7 @@ textarea{min-height:44px;resize:vertical}
 .acts .cm{color:#2563eb;position:relative;width:56px;height:56px;margin-top:6px;font-size:26px}.acts .cm i{position:absolute;top:-2px;right:-2px;background:#2563eb;color:#fff;font:700 11px/1 system-ui;border-radius:9px;padding:3px 6px;min-width:10px}.acts .cm i:empty{display:none}
 #notesM .sheet{max-height:88dvh;overflow:auto;-webkit-overflow-scrolling:touch}
 .nh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px}.nh .a{font-size:18px;font-weight:700}.nh .m{font-size:13px;color:var(--mute);margin-top:2px}.nh a{color:var(--acc)}
+.links{display:flex;gap:22px;justify-content:center;margin:2px 0 10px}.al{display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:var(--ink,#1a2530);font-size:11.5px;font-weight:600}.al img{width:48px;height:48px;border-radius:11px;box-shadow:0 1px 4px rgba(0,0,0,.25);display:block}
 .nh .x{border:0;background:#e6ebef;border-radius:50%;width:34px;height:34px;font-size:15px;flex:none}
 .nl{max-height:38dvh;overflow:auto;margin-bottom:8px}.nc{color:#2563eb;font-weight:600}
 .dt{margin-top:12px}.dt summary{font-size:14px;color:var(--mute);padding:6px 0}
@@ -183,15 +184,19 @@ $('#list').addEventListener('click',e=>{ const t=e.target; if(t.closest('[data-z
 let notesId=null;
 function renderNotes(){ const it=state.items.find(x=>x.id===notesId); const M=$('#notesM'); if(!it){M.classList.remove('show');notesId=null;return}
   const ta=M.querySelector('textarea'), keep=ta?ta.value:'', hadFocus=ta&&document.activeElement===ta, kind=st(it);
-  M.querySelector('.sheet').innerHTML='<div class="nh"><div><div class="a">'+esc(it.addr||'Address not added')+'</div><div class="m"><a href="'+zurl(it)+'" target="_blank" rel="noopener">'+esc(it.mls)+' on Zillow &#8599;</a> · '+money(it.price)+(psfTxt(it)?' · '+psfTxt(it):'')+' · '+tag(it.by)+'</div></div><button class="x" data-close aria-label="Close">&#10005;</button></div>'+
+  M.querySelector('.sheet').innerHTML='<div class="nh"><div><div class="a">'+esc(it.addr||'Address not added')+'</div><div class="m"><a href="'+zurl(it)+'" target="_blank" rel="noopener">'+esc(it.mls)+' on Zillow &#8599;</a> · '+money(it.price)+(psfTxt(it)?' · '+psfTxt(it):'')+' · '+tag(it.by)+'</div></div><button class="x" data-close aria-label="Close">&#10005;</button></div>'+linkRow(it)+
    '<div class="nl">'+((it.notes||[]).length?notesHtml(it):'<div class="lbl" style="margin:6px 0">No notes yet.</div>')+'</div>'+
    '<textarea id="nTa" placeholder="Add a note as '+esc(me||'…')+'"></textarea><button class="btn" data-add-note style="width:100%;margin-top:6px">Add note</button>'+
    '<details class="dt"><summary>Details &amp; actions</summary><div class="lbl">Added by '+esc(it.by||'?')+'</div><div class="edit"><input data-f="addr" value="'+esc(it.addr)+'" placeholder="Address"><input data-f="zip" value="'+esc(it.zip)+'" placeholder="ZIP" inputmode="numeric"><input data-f="price" value="'+(it.price||'')+'" placeholder="Price" inputmode="numeric"><input data-f="sqft" value="'+(it.sqft||'')+'" placeholder="Sq ft" inputmode="numeric"></div>'+
    '<div class="row"><button class="btn g" data-save style="flex:1">Save details</button>'+(kind==='list'?'<button class="btn g" data-discard>Discard</button>':kind==='discard'?'<button class="btn" data-restore>Restore to list</button>':'')+'<button class="btn r" data-del>Delete</button></div></details>';
   const n=M.querySelector('#nTa'); n.value=keep; if(hadFocus)n.focus(); const nl=M.querySelector('.nl'); nl.scrollTop=nl.scrollHeight; }
+function gurl(it){ return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent((it.addr?it.addr+', ':'')+'St. Petersburg, FL'+(it.zip?' '+it.zip:'')); }
+function linkRow(it){ const b=(h,ic,l,x)=>'<a class="al" href="'+h+'" target="_blank" rel="noopener"'+(x||'')+'><img src="icons/app-'+ic+'.png" alt="" width="48" height="48"><span>'+l+'</span></a>';
+  return '<div class="links">'+b(gurl(it),'gmaps','Maps')+b(zurl(it),'zillow','Zillow')+b('https://portal.onehome.com/','onehome','OneHome',' data-oh="'+esc(it.mls)+'"')+'</div>'; }
 function openNotes(id){ notesId=id; $('#notesM').classList.add('show'); renderNotes(); }
 function closeNotes(){ $('#notesM').classList.remove('show'); notesId=null; }
 $('#notesM').addEventListener('click',e=>{ const t=e.target, M=$('#notesM'); if(t===M||t.closest('[data-close]')){closeNotes();return}
+  const oh=t.closest('[data-oh]'); if(oh){ const v=oh.dataset.oh; try{navigator.clipboard.writeText(v)}catch(_){ } toast('MLS# '+v+' copied — paste it in OneHome search'); return; }
   const id=notesId, it=state.items.find(x=>x.id===id); if(!it)return;
   if(t.closest('[data-add-note]')){ const ta=M.querySelector('#nTa'); const v=ta.value.trim(); if(!v)return; ta.value=''; const note={by:me,text:v,ts:Date.now()}; mutate(s=>{const x=s.items.find(z=>z.id===id); if(x){(x.notes=x.notes||[]).push(note)}}); return; }
   if(t.closest('[data-del-note]')){ const k=+t.closest('[data-del-note]').dataset.delNote, n=it.notes[k]; mutate(s=>{const x=s.items.find(z=>z.id===id); if(x)x.notes=(x.notes||[]).filter(q=>!(q.ts===n.ts&&q.text===n.text&&q.by===n.by))}); return; }
