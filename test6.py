@@ -8,7 +8,7 @@ async def main():
         # use a route-mocked data copy so shared data is NOT touched
         d=json.load(urllib.request.urlopen(BIN+'?_=2'))
         for k,it in enumerate(d['items']): it['status']='list' if k<9 else 'discard'
-        d['items'][0]['notes'].append(dict(by='Realtor',text='Showing is Saturday at 11, lockbox code in MLS remarks, bring shoe covers',ts=1762400000000))
+        d['items'][0]['notes'].append(dict(by='Realtor',text='Showing is Saturday at 11, lockbox code in MLS remarks, bring shoe covers',ts=1762400000000)); d['items'][1]['notes']+= [dict(by='Realtor',text='seller wants offers by Friday',ts=1762400000001),dict(by='Tom',text='ask about roof age',ts=1762400000002)]
         d['items'][2]['by']='Bot'; d['items'][2]['notes']=[]
         body=json.dumps(d)
         await ctx.route('**/textdb.dev/**',lambda r: r.fulfill(status=200,body=body,headers={'access-control-allow-origin':'*','content-type':'text/plain'}) if r.request.method=='GET' else r.fulfill(status=200,body='ok',headers={'access-control-allow-origin':'*'}))

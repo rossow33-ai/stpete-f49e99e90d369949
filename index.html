@@ -42,7 +42,7 @@ header h1{font-size:18px;margin:0;flex:1;min-width:0}
 .addr{font-weight:700;font-size:15px;line-height:1.2;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .meta{font-size:11.5px;letter-spacing:-.1px;line-height:1.3;color:var(--mute);margin-top:3px;overflow:hidden}
 
-.ln{display:flex;align-items:flex-start;gap:5px;margin-top:5px;font-size:12px;line-height:1.25;color:var(--mute);min-width:0}.ln .by{flex:none;margin-top:1px}.ln .lt{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-style:italic;word-break:break-word}.ln .lc{flex:none;color:#2563eb;font-weight:700;font-size:11px;margin-top:1px}
+.ln{display:flex;align-items:flex-start;gap:5px;margin-top:5px;font-size:12px;line-height:1.25;color:var(--mute);min-width:0}.ln .by{flex:none;margin-top:1px}.ln .lt{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;font-style:italic;word-break:break-word}.ln .lc{flex:none;color:#2563eb;font-weight:700;font-size:11px;margin-top:1px}
 .meta a,a.z{color:var(--acc);font-weight:600;text-decoration:underline;padding:4px 0}
 .meta b{color:var(--ink)}
 .handle{width:40px;align-self:stretch;display:flex;align-items:center;justify-content:center;font-size:26px;color:#8a97a3;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;flex:none}
@@ -164,8 +164,8 @@ function ppsf(it){ return it.price&&it.sqft?Math.round(it.price/it.sqft):null }
 function psfTxt(it){ const v=ppsf(it); return v?'$'+v.toLocaleString('en-US')+'/sf':'' }
 function tag(by){ by=by||'?'; return '<span class="by by-'+esc(by.toLowerCase())+'">'+esc(by)+'</span>' }
 let curId=null, swiping=false;
-function lastNote(it){ const ns=it.notes||[]; if(!ns.length)return '<div class="ln">'+tag(it.by)+'</div>'; const n=ns.reduce((a,b)=>(b.ts||0)>=(a.ts||0)?b:a);
-  return '<div class="ln">'+tag(n.by)+'<span class="lt">'+esc(String(n.text).replace(/\s+/g,' '))+'</span>'+(ns.length>1?'<span class="lc">+'+(ns.length-1)+'</span>':'')+'</div>'; }
+function lastNote(it){ const ns=(it.notes||[]).slice().sort((a,b)=>(b.ts||0)-(a.ts||0)); if(!ns.length)return '<div class="ln">'+tag(it.by)+'</div>';
+  return '<div class="ln">'+tag(it.by)+'<span class="lt">'+esc(ns.map(n=>String(n.text).replace(/\s+/g,' ').trim()).join(', '))+'</span></div>'; }
 function notesHtml(it){ return (it.notes||[]).map((n,k)=>'<div class="note '+(n.by==='Realtor'?'realtor':n.by==='Bot'?'bot':'tom')+'">'+esc(n.text)+'<small>'+esc(n.by)+(n.ts?' · '+new Date(n.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+(n.by===me?'<button data-del-note="'+k+'">remove</button>':'')+'</small></div>').join(''); }
 function renderList(kind){ const L=$('#list'); let arr=state.items.filter(i=>st(i)===kind); 
   if(!arr.length){ L.innerHTML='<div class="empty">'+(kind==='list'?'Nothing ranked yet. Swipe right on properties in Realtinder to add them here.':'Nothing discarded.')+'</div>'; return }
