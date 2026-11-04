@@ -8,14 +8,22 @@
 <style>
 :root{--bg:#f4f6f8;--card:#fff;--ink:#14202b;--mute:#6b7885;--acc:#0f766e;--line:#e3e8ed}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-header{position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;display:flex;align-items:center;gap:10px}
-header h1{font-size:18px;margin:0;flex:1}
-.sub{font-size:12px;opacity:.85;display:block;font-weight:400}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overscroll-behavior-y:none}
+header{position:sticky;top:0;z-index:15;background:var(--acc);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;display:flex;align-items:center;gap:10px}
+header h1{font-size:18px;margin:0;flex:1;min-width:0}
+.sub{font-size:12px;opacity:.85;display:block;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .who{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:16px;padding:7px 12px;font-size:14px}
-.add{background:#fff;color:var(--acc);border:0;border-radius:50%;width:38px;height:38px;font-size:26px;line-height:1;font-weight:600}
-#dot{width:9px;height:9px;border-radius:50%;background:#9ca3af}
+.burger{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:10px;width:42px;height:38px;font-size:24px;line-height:1;position:relative}
+.burger i{position:absolute;top:-4px;right:-4px;background:#f59e0b;color:#fff;border-radius:10px;font-size:11px;font-style:normal;padding:2px 6px;font-weight:700}
+#dot{width:9px;height:9px;border-radius:50%;background:#9ca3af;flex:none}
 #dot.ok{background:#86efac}#dot.err{background:#fca5a5}
+#menu{position:fixed;top:calc(58px + env(safe-area-inset-top));left:10px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.28);z-index:25;display:none;min-width:240px;overflow:hidden}
+#menu.show{display:block}
+#menu button{display:flex;width:100%;align-items:center;gap:10px;background:none;border:0;border-bottom:1px solid var(--line);padding:15px 16px;font-size:17px;text-align:left;color:var(--ink)}
+#menu button:last-child{border-bottom:0;color:var(--acc);font-weight:700}
+#menu button.cur{background:#e6f4f2;font-weight:700}
+#menu button span.n{margin-left:auto;color:var(--mute);font-size:14px}
+#scrim{position:fixed;inset:0;z-index:20;display:none}#scrim.show{display:block}
 #list{padding:10px 10px calc(40px + env(safe-area-inset-bottom))}
 .item{background:var(--card);border-radius:12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.08);overflow:hidden}
 .bar{display:flex;align-items:center;min-height:62px;padding:6px 0 6px 10px;gap:10px}
@@ -23,9 +31,10 @@ header h1{font-size:18px;margin:0;flex:1}
 .main{flex:1;min-width:0;cursor:pointer}
 .addr{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meta{font-size:13px;color:var(--mute);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta a{color:var(--acc);font-weight:600;text-decoration:underline;padding:4px 0}
+.meta a,a.z{color:var(--acc);font-weight:600;text-decoration:underline;padding:4px 0}
 .meta b{color:var(--ink)}
 .handle{width:56px;align-self:stretch;display:flex;align-items:center;justify-content:center;font-size:28px;color:#8a97a3;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;flex:none}
+.restore{width:60px;align-self:stretch;border:0;background:none;color:var(--acc);font-size:26px;font-weight:700;flex:none}
 .sortable-ghost{opacity:.35}
 .sortable-chosen{box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .detail{display:none;border-top:1px solid var(--line);padding:10px 12px 12px;background:#fafcfd}
@@ -41,28 +50,53 @@ textarea{min-height:44px;resize:vertical}
 .btn.g{background:#e6ebef;color:var(--ink)}.btn.r{background:#fee2e2;color:#b91c1c}
 .edit{display:grid;grid-template-columns:1fr 90px 110px;gap:6px;margin-top:10px}
 .lbl{font-size:12px;color:var(--mute);margin:10px 0 4px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:40}
 .modal.show{display:flex}
 .sheet{background:#fff;width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
 .sheet h2{margin:0 0 10px;font-size:18px}
 .sheet input{margin-bottom:8px}
-#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#14202b;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;display:none;z-index:30;gap:12px;align-items:center}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#14202b;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;display:none;z-index:50;gap:12px;align-items:center;max-width:92vw}
 #toast button{background:none;border:0;color:#7dd3c8;font-weight:700;font-size:14px}
-.empty{text-align:center;color:var(--mute);padding:40px}
-@media(min-width:700px){#list,header{max-width:640px;margin-left:auto;margin-right:auto}}
+.empty{text-align:center;color:var(--mute);padding:50px 24px}
+/* Realtinder */
+#tinder{display:none;padding:10px 12px calc(14px + env(safe-area-inset-bottom));flex-direction:column;height:calc(100dvh - 60px - env(safe-area-inset-top))}
+.deck{position:relative;flex:1;min-height:320px}
+.card{position:absolute;inset:0;background:#fff;border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.18);overflow:hidden;display:flex;flex-direction:column;touch-action:pan-y;user-select:none;-webkit-user-select:none;will-change:transform}
+.card.back{transform:scale(.95) translateY(12px);opacity:.7;pointer-events:none}
+.photo{flex:1;min-height:150px;background:#dbe3e8 center/cover no-repeat;position:relative}
+.photo .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;opacity:.35}
+.info{padding:12px 16px 14px}
+.info .p{font-size:24px;font-weight:800}
+.info .a{font-size:17px;font-weight:600;margin-top:2px}
+.info .m{font-size:14px;color:var(--mute);margin-top:4px}
+.info .nt{font-size:13px;color:#33424f;margin-top:8px;max-height:3.9em;overflow:hidden;background:#f4f6f8;border-radius:8px;padding:6px 8px}
+.stamp{position:absolute;top:22px;font-size:30px;font-weight:900;border:4px solid;border-radius:10px;padding:2px 12px;opacity:0;transform:rotate(-12deg);background:rgba(255,255,255,.85);pointer-events:none}
+.stamp.l{right:20px;color:#dc2626;transform:rotate(12deg)}.stamp.k{left:20px;color:#16a34a}
+.acts{display:flex;justify-content:center;gap:34px;padding-top:14px}
+.acts button{width:68px;height:68px;border-radius:50%;border:0;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.2);font-size:30px}
+.acts .no{color:#dc2626}.acts .yes{color:#16a34a}
+.cnt{text-align:center;color:var(--mute);font-size:13px;padding-top:8px}
+@media(min-width:700px){#list,header,#tinder{max-width:640px;margin-left:auto;margin-right:auto}}
 </style></head><body>
-<header><div id="dot"></div><h1>St. Pete Shortlist<span class="sub">Ranked best to worst · miles from Central Ave</span></h1><button class="who" id="who">…</button><button class="add" id="addBtn" aria-label="Add property">+</button></header>
+<header><button class="burger" id="burger" aria-label="Menu">&#9776;<i id="qBadge" style="display:none"></i></button><h1 id="title">St. Pete Shortlist<span class="sub" id="sub"></span></h1><div id="dot"></div><button class="who" id="who">…</button></header>
+<div id="scrim"></div>
+<div id="menu">
+ <button data-v="list">&#128203; List <span class="n" id="nList"></span></button>
+ <button data-v="discard">&#128465; Discarded <span class="n" id="nDis"></span></button>
+ <button data-v="tinder">&#128149; Realtinder <span class="n" id="nQ"></span></button>
+ <button data-v="add">&#43; Add MLS number</button>
+</div>
 <div id="list"></div>
+<div id="tinder"></div>
 
 <div class="modal" id="addM"><div class="sheet">
 <h2>Add property</h2>
 <input id="aMls" placeholder="MLS number (e.g. TB8557907)" autocapitalize="characters" autocomplete="off">
 <input id="aAddr" placeholder="Street address (e.g. 123 4th Ave S)" autocomplete="off">
-<div class="row" style="margin-top:0"><input id="aZip" placeholder="ZIP" inputmode="numeric" style="flex:1"><input id="aPrice" placeholder="Price" inputmode="numeric" style="flex:1.4"></div>
-<div class="lbl">Address and price are optional. Add them later by tapping the property and editing. Miles are worked out from the address.</div>
-<div class="row"><button class="btn g" id="aCancel" style="flex:1">Cancel</button><button class="btn" id="aSave" style="flex:2">Add to list</button></div>
+<div class="row" style="margin-top:0"><input id="aZip" placeholder="ZIP" inputmode="numeric" style="flex:1"><input id="aPrice" placeholder="Price (optional)" inputmode="numeric" style="flex:1.4"></div>
+<div class="lbl">Add the street address and I'll look up the photo, price and miles from Central Ave. It goes to the front of Realtinder.</div>
+<div class="row"><button class="btn g" id="aCancel" style="flex:1">Cancel</button><button class="btn" id="aSave" style="flex:2">Add to Realtinder</button></div>
 </div></div>
-
 <div class="modal" id="whoM"><div class="sheet">
 <h2>Who's this?</h2>
 <div class="lbl" style="margin-top:0">Shown next to what you add and the notes you write.</div>
@@ -74,63 +108,102 @@ textarea{min-height:44px;resize:vertical}
 <script>
 const BIN="https://textdb.dev/api/data/stpete-c486ca4ae51d637c";
 const $=s=>document.querySelector(s);
-let state={items:[]}, open=new Set(), me=localStorage.getItem('who')||'', dragging=false, lastJson='';
+let state={items:[]}, open=new Set(), me=localStorage.getItem('who')||'', dragging=false, lastJson='', pending=0, view=localStorage.getItem('view')||'list';
 const CA={lat:27.7709,w:-82.75,e:-82.63};
 function miles(lat,lon){ if(lat==null)return null; const lo=Math.min(Math.max(lon,CA.w),CA.e);
   const dy=(lat-CA.lat)*69.0, dx=(lon-lo)*69.17*Math.cos(lat*Math.PI/180); return Math.round(Math.hypot(dx,dy)*10)/10; }
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=p=>p?'$'+Number(p).toLocaleString('en-US'):'price ?';
-function zurl(it){ if(it.addr){ const a=(it.addr+' Saint Petersburg FL '+(it.zip||'')).trim().replace(/[^A-Za-z0-9 ]/g,'').replace(/\s+/g,'-');
-  return 'https://www.zillow.com/homes/'+a+'_rb/'; } return 'https://www.zillow.com/homes/'+encodeURIComponent(it.mls)+'_rb/'; }
+const st=it=>it.status||'list';
+function zslug(it){ return (it.addr+' Saint Petersburg FL '+(it.zip||'')).trim().replace(/[^A-Za-z0-9 ]/g,'').replace(/\s+/g,'-'); }
+function zurl(it){ return it.addr?'https://www.zillow.com/homes/'+zslug(it)+'_rb/':'https://www.zillow.com/homes/'+encodeURIComponent(it.mls)+'_rb/'; }
 function setDot(c){$('#dot').className=c}
 // ---- shared storage (read-modify-write so two people's edits merge) ----
-async function pull(){ const r=await fetch(BIN+'?_='+Date.now(),{cache:'no-store'}); if(!r.ok)throw 0; const t=await r.text(); const o=JSON.parse(t); if(!o||!Array.isArray(o.items))throw 0; return o; }
+async function pull(){ const r=await fetch(BIN+'?_='+Date.now(),{cache:'no-store'}); if(!r.ok)throw 0; const o=JSON.parse(await r.text()); if(!o||!Array.isArray(o.items))throw 0; return o; }
 async function push(s){ const r=await fetch(BIN,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(s)}); if(!r.ok)throw 0; }
 let chain=Promise.resolve();
-function mutate(fn){ chain=chain.then(async()=>{ try{ const s=await pull(); if(!s.items)s.items=[]; fn(s); await push(s); state=s; localStorage.setItem('cache',JSON.stringify(s)); setDot('ok'); render(); }catch(e){ setDot('err'); toast('Could not save. Check connection.'); } }); return chain; }
-async function refresh(){ if(dragging||document.querySelector('.modal.show'))return; const ae=document.activeElement; if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT')&&ae.value)return;
+function mutate(fn){ try{fn(state)}catch(e){} render(); pending++;
+  chain=chain.then(async()=>{ try{ const s=await pull(); fn(s); await push(s); state=s; localStorage.setItem('cache',JSON.stringify(s)); setDot('ok'); }catch(e){ setDot('err'); toast('Could not save. Check connection.'); } finally{ pending--; if(!pending)render(); } }); return chain; }
+async function refresh(){ if(dragging||pending||document.querySelector('.modal.show'))return; const ae=document.activeElement; if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT')&&ae.value)return;
   try{ const s=await pull(); setDot('ok'); const j=JSON.stringify(s); if(j!==lastJson){ state=s; localStorage.setItem('cache',j); render(); } }catch(e){ setDot('err'); } }
-// ---- render ----
-function render(){ lastJson=JSON.stringify(state); const L=$('#list');
-  if(!state.items.length){L.innerHTML='<div class="empty">No properties yet. Tap + to add one.</div>';return}
-  L.innerHTML=state.items.map((it,i)=>{ const mi=miles(it.lat,it.lon);
-   const notes=(it.notes||[]).map((n,k)=>'<div class="note '+(n.by==='Realtor'?'realtor':'tom')+'">'+esc(n.text)+'<small>'+esc(n.by)+(n.ts?' · '+new Date(n.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+(n.by===me?'<button data-del-note="'+k+'">remove</button>':'')+'</small></div>').join('');
-   return '<div class="item'+(open.has(it.id)?' open':'')+'" data-id="'+esc(it.id)+'"><div class="bar"><div class="rank">'+(i+1)+'</div><div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a> · <b>'+money(it.price)+'</b> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div></div><div class="handle" aria-label="Drag to reorder">&#9776;</div></div>'+
-   '<div class="detail">'+notes+'<textarea placeholder="Add a note as '+esc(me||'…')+'"></textarea><div class="row"><button class="btn" data-add-note style="flex:1">Add note</button><a class="btn g" href="'+zurl(it)+'" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Zillow</a></div>'+
+// ---- views ----
+const TITLES={list:'My Ranking',discard:'Discarded',tinder:'Realtinder'};
+function render(){ lastJson=JSON.stringify(state);
+  const c=k=>state.items.filter(i=>st(i)===k).length;
+  $('#nList').textContent=c('list'); $('#nDis').textContent=c('discard'); $('#nQ').textContent=c('queue');
+  const q=c('queue'); $('#qBadge').style.display=q?'':'none'; $('#qBadge').textContent=q;
+  document.querySelectorAll('#menu button[data-v]').forEach(b=>b.classList.toggle('cur',b.dataset.v===view));
+  $('#title').firstChild.textContent=TITLES[view]||'';
+  $('#sub').textContent=view==='list'?'Drag ≡ to rank · miles from Central Ave':view==='discard'?'Tap ↩ to put one back on the list':'Swipe right = list · left = discard';
+  $('#list').style.display=view==='tinder'?'none':''; $('#tinder').style.display=view==='tinder'?'flex':'none';
+  if(view==='tinder')renderTinder(); else renderList(view==='discard'?'discard':'list'); }
+function notesHtml(it){ return (it.notes||[]).map((n,k)=>'<div class="note '+(n.by==='Realtor'?'realtor':'tom')+'">'+esc(n.text)+'<small>'+esc(n.by)+(n.ts?' · '+new Date(n.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+(n.by===me?'<button data-del-note="'+k+'">remove</button>':'')+'</small></div>').join(''); }
+function renderList(kind){ const L=$('#list'); let arr=state.items.filter(i=>st(i)===kind); if(kind==='discard')arr=arr.slice().reverse();
+  if(!arr.length){ L.innerHTML='<div class="empty">'+(kind==='list'?'Nothing ranked yet. Swipe right on properties in Realtinder to add them here.':'Nothing discarded.')+'</div>'; return }
+  L.innerHTML=arr.map((it,i)=>{ const mi=miles(it.lat,it.lon);
+   return '<div class="item'+(open.has(it.id)?' open':'')+'" data-id="'+esc(it.id)+'"><div class="bar">'+(kind==='list'?'<div class="rank">'+(i+1)+'</div>':'')+'<div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a> · <b>'+money(it.price)+'</b> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div></div>'+
+   (kind==='list'?'<div class="handle" aria-label="Drag to reorder">&#9776;</div>':'<button class="restore" data-restore aria-label="Restore to list">&#8617;</button>')+'</div>'+
+   '<div class="detail">'+notesHtml(it)+'<textarea placeholder="Add a note as '+esc(me||'…')+'"></textarea><div class="row"><button class="btn" data-add-note style="flex:1">Add note</button><a class="btn g" href="'+zurl(it)+'" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Zillow</a></div>'+
    '<div class="lbl">Edit details · added by '+esc(it.by||'?')+'</div><div class="edit"><input data-f="addr" value="'+esc(it.addr)+'" placeholder="Address"><input data-f="zip" value="'+esc(it.zip)+'" placeholder="ZIP" inputmode="numeric"><input data-f="price" value="'+(it.price||'')+'" placeholder="Price" inputmode="numeric"></div>'+
-   '<div class="row"><button class="btn g" data-save style="flex:1">Save details</button><button class="btn r" data-del>Delete</button></div></div></div>'; }).join('');
-  initSort(); }
+   '<div class="row"><button class="btn g" data-save style="flex:1">Save details</button>'+(kind==='list'?'<button class="btn g" data-discard>Discard</button>':'')+'<button class="btn r" data-del>Delete</button></div></div></div>'; }).join('');
+  if(kind==='list')initSort(); else if(sortable){sortable.destroy();sortable=null} }
 let sortable;
-function initSort(){ if(sortable)sortable.destroy(); sortable=new Sortable($('#list'),{handle:'.handle',animation:150,delay:0,forceFallback:false,ghostClass:'sortable-ghost',chosenClass:'sortable-chosen',
+function initSort(){ if(sortable)sortable.destroy(); sortable=new Sortable($('#list'),{handle:'.handle',animation:150,ghostClass:'sortable-ghost',chosenClass:'sortable-chosen',
   onStart(){dragging=true}, onEnd(e){ dragging=false; if(e.oldIndex===e.newIndex)return; const el=e.item, id=el.dataset.id, prev=el.previousElementSibling?el.previousElementSibling.dataset.id:null;
-   const ids=[...document.querySelectorAll('.item')].map(x=>x.dataset.id); state.items.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id)); render();
-   mutate(s=>{ const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); let j=prev?s.items.findIndex(x=>x.id===prev)+1:0; s.items.splice(j,0,m); }); } }); }
-// ---- interactions ----
-$('#list').addEventListener('click',e=>{ const t=e.target; if(t.closest('[data-z]'))return; const el=t.closest('.item'); if(!el)return; const id=el.dataset.id, it=state.items.find(x=>x.id===id);
+   mutate(s=>{ const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); let j; if(prev){j=s.items.findIndex(x=>x.id===prev)+1}else{j=s.items.findIndex(x=>st(x)==='list'); if(j<0)j=s.items.length} s.items.splice(j,0,m); }); } }); }
+function setStatus(s,id,status){ const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); m.status=status; s.items.push(m); }
+$('#list').addEventListener('click',e=>{ const t=e.target; if(t.closest('[data-z]'))return; const el=t.closest('.item'); if(!el)return; const id=el.dataset.id, it=state.items.find(x=>x.id===id); if(!it)return;
+  if(t.closest('[data-restore]')){ mutate(s=>setStatus(s,id,'list')); toast('Back on the list (bottom)'); return; }
+  if(t.closest('[data-discard]')){ mutate(s=>setStatus(s,id,'discard')); toast('Discarded',()=>mutate(s=>setStatus(s,id,'list'))); return; }
   if(t.closest('[data-add-note]')){ const ta=el.querySelector('textarea'); const v=ta.value.trim(); if(!v)return; ta.value=''; const note={by:me,text:v,ts:Date.now()}; open.add(id); mutate(s=>{const x=s.items.find(z=>z.id===id); if(x){(x.notes=x.notes||[]).push(note)}}); return; }
   if(t.closest('[data-del-note]')){ const k=+t.closest('[data-del-note]').dataset.delNote, n=it.notes[k]; mutate(s=>{const x=s.items.find(z=>z.id===id); if(x)x.notes=(x.notes||[]).filter(q=>!(q.ts===n.ts&&q.text===n.text&&q.by===n.by))}); return; }
-  if(t.closest('[data-del]')){ if(!confirm('Delete '+(it.addr||it.mls)+'?'))return; const idx=state.items.indexOf(it), copy=JSON.parse(JSON.stringify(it)); mutate(s=>{s.items=s.items.filter(z=>z.id!==id)}); toast('Deleted',()=>mutate(s=>{ if(!s.items.some(z=>z.id===id)) s.items.splice(Math.min(idx,s.items.length),0,copy)})); return; }
-  if(t.closest('[data-save]')){ const g=f=>el.querySelector('[data-f='+f+']').value.trim(); const addr=g('addr'),zip=g('zip'),price=parseInt(g('price').replace(/\D/g,''))||null; saveDetails(id,addr,zip,price); return; }
+  if(t.closest('[data-del]')){ if(!confirm('Delete '+(it.addr||it.mls)+' permanently?'))return; const idx=state.items.indexOf(it), copy=JSON.parse(JSON.stringify(it)); mutate(s=>{s.items=s.items.filter(z=>z.id!==id)}); toast('Deleted',()=>mutate(s=>{ if(!s.items.some(z=>z.id===id)) s.items.splice(Math.min(idx,s.items.length),0,copy)})); return; }
+  if(t.closest('[data-save]')){ const g=f=>el.querySelector('[data-f='+f+']').value.trim(); saveDetails(id,g('addr'),g('zip'),parseInt(g('price').replace(/\D/g,''))||null); return; }
   if(t.closest('.main')){ open.has(id)?open.delete(id):open.add(id); el.classList.toggle('open'); } });
+// ---- Realtinder ----
+function renderTinder(){ const T=$('#tinder'); const q=state.items.filter(i=>st(i)==='queue');
+  if(!q.length){ T.innerHTML='<div class="empty" style="margin:auto">You\'re all caught up.<br><br>Use the menu &rarr; <b>Add MLS number</b> to add a new property.</div>'; return }
+  const card=(it,back)=>{ const mi=miles(it.lat,it.lon); const nt=(it.notes||[]).map(n=>n.by+': '+n.text).join(' · ');
+   return '<div class="card'+(back?' back':'')+'" data-id="'+esc(it.id)+'"><div class="photo"'+(it.img?' style="background-image:url(\''+esc(it.img)+'\')"':'')+'>'+(it.img?'':'<div class="ph">&#127968;</div>')+'<div class="stamp k">LIST</div><div class="stamp l">NOPE</div></div><div class="info"><div class="p">'+money(it.price)+'</div><div class="a">'+esc(it.addr||'Address not added')+'</div><div class="m"><a class="z" href="'+zurl(it)+'" target="_blank" rel="noopener">'+esc(it.mls)+' on Zillow &#8599;</a> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+' from Central Ave</div>'+(nt?'<div class="nt">'+esc(nt)+'</div>':'')+'<div class="m" style="font-size:12px">Added by '+esc(it.by||'?')+'</div></div></div>'; };
+  T.innerHTML='<div class="deck">'+(q[1]?card(q[1],true):'')+card(q[0],false)+'</div><div class="acts"><button class="no" id="bNo" aria-label="Discard">&#10005;</button><button class="yes" id="bYes" aria-label="Add to list">&#9829;</button></div><div class="cnt">'+q.length+' left to sort</div>';
+  const el=T.querySelector('.card:not(.back)'); attachSwipe(el,q[0].id); $('#bNo').onclick=()=>fling(el,q[0].id,-1); $('#bYes').onclick=()=>fling(el,q[0].id,1); }
+function decide(id,dir){ if(dir>0){ mutate(s=>setStatus(s,id,'list')); toast('Added to bottom of your list',()=>mutate(s=>setStatus(s,id,'queue'))); } else { mutate(s=>setStatus(s,id,'discard')); toast('Discarded',()=>mutate(s=>{const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); m.status='queue'; s.items.unshift(m)})); } }
+let flinging=false;
+function fling(el,id,dir){ if(flinging)return; flinging=true; el.style.transition='transform .28s ease-out,opacity .28s'; el.style.transform='translateX('+(dir*window.innerWidth*1.2)+'px) rotate('+(dir*25)+'deg)'; el.style.opacity='.2'; setTimeout(()=>{flinging=false; decide(id,dir)},260); }
+function attachSwipe(el,id){ let sx=0,sy=0,dx=0,on=false,moved=false; const k=el.querySelector('.stamp.k'), l=el.querySelector('.stamp.l');
+  el.addEventListener('pointerdown',e=>{ if(e.target.closest('a'))return; on=true;moved=false;sx=e.clientX;sy=e.clientY;dx=0; el.style.transition='none'; el.setPointerCapture(e.pointerId); });
+  el.addEventListener('pointermove',e=>{ if(!on)return; dx=e.clientX-sx; if(Math.abs(dx)>6)moved=true; el.style.transform='translateX('+dx+'px) rotate('+(dx/18)+'deg)'; k.style.opacity=Math.max(0,Math.min(1,dx/100)); l.style.opacity=Math.max(0,Math.min(1,-dx/100)); });
+  const end=()=>{ if(!on)return; on=false; if(Math.abs(dx)>100){ fling(el,id,dx>0?1:-1) } else { el.style.transition='transform .2s'; el.style.transform=''; k.style.opacity=0; l.style.opacity=0; } };
+  el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end); }
+// ---- add / enrich ----
 async function geocode(addr,zip){ if(!addr)return null; try{ const q=encodeURIComponent(addr+', Saint Petersburg, FL '+(zip||'')); const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q='+q); const j=await r.json(); if(j[0])return{lat:+j[0].lat,lon:+j[0].lon}; }catch(e){} return null; }
-async function saveDetails(id,addr,zip,price){ const cur=state.items.find(x=>x.id===id); let c=null; if(addr&&(addr!==cur.addr||zip!==cur.zip||cur.lat==null)){ toast('Finding location…'); c=await geocode(addr,zip); if(!c)toast('Saved, but could not locate address for miles'); }
-  mutate(s=>{const x=s.items.find(z=>z.id===id); if(!x)return; x.addr=addr; x.zip=zip; x.price=price; if(c){x.lat=c.lat;x.lon=c.lon} }); }
-$('#addBtn').onclick=()=>{ ['aMls','aAddr','aZip','aPrice'].forEach(i=>$('#'+i).value=''); $('#addM').classList.add('show'); setTimeout(()=>$('#aMls').focus(),50); };
+async function enrich(addr,zip){ if(!addr)return {}; try{ const ctl=new AbortController(); setTimeout(()=>ctl.abort(),20000); const r=await fetch('https://r.jina.ai/'+zurl({addr,zip,mls:''}),{signal:ctl.signal}); const t=await r.text(); const out={};
+  let m=t.match(/1st image of [^\]]*\]\((https:\/\/photos\.zillowstatic\.com\/[^)\s]+)\)/)||t.match(/\]\((https:\/\/photos\.zillowstatic\.com\/fp\/[^)\s]*-(?:cc_ft_960|sr_576_384|sc_1152_768)\.jpg)\)/); if(m)out.img=m[1];
+  m=t.match(/^\$([\d,]+)\s*$/m); if(m)out.price=parseInt(m[1].replace(/,/g,'')); m=t.match(/MLS#:\s*([A-Z]*\d+)/); if(m)out.mls=m[1]; return out; }catch(e){return {}} }
+async function saveDetails(id,addr,zip,price){ const cur=state.items.find(x=>x.id===id); let c=null,en={}; if(addr&&(addr!==cur.addr||zip!==cur.zip||cur.lat==null||!cur.img)){ toast('Looking up address…'); [c,en]=await Promise.all([geocode(addr,zip),enrich(addr,zip)]); if(!c)toast('Saved, but could not locate address for miles'); }
+  mutate(s=>{const x=s.items.find(z=>z.id===id); if(!x)return; x.addr=addr; x.zip=zip; x.price=price||x.price||en.price||null; if(c){x.lat=c.lat;x.lon=c.lon} if(en.img)x.img=en.img; }); }
+function openAdd(){ ['aMls','aAddr','aZip','aPrice'].forEach(i=>$('#'+i).value=''); $('#addM').classList.add('show'); setTimeout(()=>$('#aMls').focus(),50); }
 $('#aCancel').onclick=()=>$('#addM').classList.remove('show');
 $('#addM').onclick=e=>{ if(e.target.id==='addM')$('#addM').classList.remove('show') };
-$('#aSave').onclick=async()=>{ const mls=$('#aMls').value.trim().toUpperCase().replace(/\s+/g,''); if(!mls){$('#aMls').focus();return}
+$('#aSave').onclick=async()=>{ let mls=$('#aMls').value.trim().toUpperCase().replace(/\s+/g,''); if(!mls){$('#aMls').focus();return}
   if(state.items.some(x=>x.mls===mls)){toast('Already on the list');return}
-  const addr=$('#aAddr').value.trim(), zip=$('#aZip').value.trim(), price=parseInt($('#aPrice').value.replace(/\D/g,''))||null;
-  $('#aSave').disabled=true; const c=await geocode(addr,zip); $('#aSave').disabled=false; $('#addM').classList.remove('show');
-  const it={id:mls+'-'+Math.random().toString(36).slice(2,6),mls,addr,zip,price,lat:c?c.lat:null,lon:c?c.lon:null,by:me,notes:[]};
-  open.add(it.id); await mutate(s=>{ if(!s.items.some(x=>x.mls===mls)) s.items.push(it) }); if(addr&&!c)toast('Added. Could not locate address for miles.'); setTimeout(()=>{const el=document.querySelector('[data-id="'+it.id+'"]'); el&&el.scrollIntoView({behavior:'smooth',block:'center'})},100); };
+  const addr=$('#aAddr').value.trim(), zip=$('#aZip').value.trim(); let price=parseInt($('#aPrice').value.replace(/\D/g,''))||null;
+  $('#aSave').disabled=true; $('#aSave').textContent='Looking up…'; const [c,en]=await Promise.all([geocode(addr,zip),enrich(addr,zip)]); $('#aSave').disabled=false; $('#aSave').textContent='Add to Realtinder'; $('#addM').classList.remove('show');
+  const it={id:mls+'-'+Math.random().toString(36).slice(2,6),mls,addr,zip,price:price||en.price||null,lat:c?c.lat:null,lon:c?c.lon:null,img:en.img||'',by:me,status:'queue',notes:[]};
+  await mutate(s=>{ if(!s.items.some(x=>x.mls===mls)) s.items.unshift(it) }); setView('tinder'); toast(addr?(c?'Added to the front of Realtinder':'Added. Could not locate address for miles.'):'Added. Add the street address to get a photo and miles.'); };
+// ---- menu / identity ----
+function setView(v){ view=v; localStorage.setItem('view',v); closeMenu(); render(); window.scrollTo(0,0); }
+function closeMenu(){ $('#menu').classList.remove('show'); $('#scrim').classList.remove('show'); }
+$('#burger').onclick=()=>{ const s=!$('#menu').classList.contains('show'); $('#menu').classList.toggle('show',s); $('#scrim').classList.toggle('show',s); };
+$('#scrim').onclick=closeMenu;
+document.querySelectorAll('#menu button').forEach(b=>b.onclick=()=>{ if(b.dataset.v==='add'){closeMenu();openAdd()} else setView(b.dataset.v) });
 function setWho(w){ me=w; localStorage.setItem('who',w); $('#who').textContent=w; $('#whoM').classList.remove('show'); render(); refresh(); }
 $('#who').onclick=()=>$('#whoM').classList.add('show');
 document.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>setWho(b.dataset.w));
-let tt,undoFn; function toast(m,undo){ $('#tmsg').textContent=m; undoFn=undo; $('#tundo').style.display=undo?'':'none'; $('#toast').style.display='flex'; clearTimeout(tt); tt=setTimeout(()=>$('#toast').style.display='none',undo?6000:2500); }
+let tt,undoFn; function toast(m,undo){ $('#tmsg').textContent=m; undoFn=undo; $('#tundo').style.display=undo?'':'none'; $('#toast').style.display='flex'; clearTimeout(tt); tt=setTimeout(()=>$('#toast').style.display='none',undo?6000:2800); }
 $('#tundo').onclick=()=>{ $('#toast').style.display='none'; undoFn&&undoFn(); };
 // ---- boot ----
-try{ const c=JSON.parse(localStorage.getItem('cache')||'null'); if(c)state=c }catch(e){}
+try{ const c=JSON.parse(localStorage.getItem('cache')||'null'); if(c&&c.items)state=c }catch(e){}
 $('#who').textContent=me||'Who?'; if(!me)$('#whoM').classList.add('show'); render(); refresh();
 setInterval(refresh,6000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()}); window.addEventListener('focus',refresh);
 </script></body></html>
