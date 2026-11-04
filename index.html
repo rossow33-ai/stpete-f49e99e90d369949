@@ -136,23 +136,23 @@ function render(){ lastJson=JSON.stringify(state);
   const q=c('queue'); $('#qBadge').style.display=q?'':'none'; $('#qBadge').textContent=q;
   document.querySelectorAll('#menu button[data-v]').forEach(b=>b.classList.toggle('cur',b.dataset.v===view));
   $('#title').firstChild.textContent=TITLES[view]||'';
-  $('#sub').textContent=view==='list'?'Drag ≡ to rank · miles from Central Ave':view==='discard'?'Tap ↩ to put one back on the list':'Swipe right = list · left = discard';
+  $('#sub').textContent=view==='list'?'Drag ≡ to rank · miles from Central Ave':view==='discard'?'Drag ≡ to rank · open one to restore it':'Swipe right = list · left = discard';
   $('#list').style.display=view==='tinder'?'none':''; $('#tinder').style.display=view==='tinder'?'flex':'none';
   if(view==='tinder')renderTinder(); else renderList(view==='discard'?'discard':'list'); }
 function notesHtml(it){ return (it.notes||[]).map((n,k)=>'<div class="note '+(n.by==='Realtor'?'realtor':'tom')+'">'+esc(n.text)+'<small>'+esc(n.by)+(n.ts?' · '+new Date(n.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+(n.by===me?'<button data-del-note="'+k+'">remove</button>':'')+'</small></div>').join(''); }
-function renderList(kind){ const L=$('#list'); let arr=state.items.filter(i=>st(i)===kind); if(kind==='discard')arr=arr.slice().reverse();
+function renderList(kind){ const L=$('#list'); let arr=state.items.filter(i=>st(i)===kind); 
   if(!arr.length){ L.innerHTML='<div class="empty">'+(kind==='list'?'Nothing ranked yet. Swipe right on properties in Realtinder to add them here.':'Nothing discarded.')+'</div>'; return }
   L.innerHTML=arr.map((it,i)=>{ const mi=miles(it.lat,it.lon);
-   return '<div class="item'+(open.has(it.id)?' open':'')+'" data-id="'+esc(it.id)+'"><div class="bar">'+(kind==='list'?'<div class="rank">'+(i+1)+'</div>':'')+'<div class="thumb">'+(it.img?'<img src="'+esc(it.img)+'" loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()">':'&#127968;')+'</div><div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a> · <b>'+money(it.price)+'</b> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div></div>'+
-   (kind==='list'?'<div class="handle" aria-label="Drag to reorder">&#9776;</div>':'<button class="restore" data-restore aria-label="Restore to list">&#8617;</button>')+'</div>'+
+   return '<div class="item'+(open.has(it.id)?' open':'')+'" data-id="'+esc(it.id)+'"><div class="bar">'+'<div class="rank">'+(i+1)+'</div>'+'<div class="thumb">'+(it.img?'<img src="'+esc(it.img)+'" loading="lazy" referrerpolicy="no-referrer" alt="" onerror="this.remove()">':'&#127968;')+'</div><div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a> · <b>'+money(it.price)+'</b> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div></div>'+
+   '<div class="handle" aria-label="Drag to reorder">&#9776;</div>'+'</div>'+
    '<div class="detail">'+notesHtml(it)+'<textarea placeholder="Add a note as '+esc(me||'…')+'"></textarea><div class="row"><button class="btn" data-add-note style="flex:1">Add note</button><a class="btn g" href="'+zurl(it)+'" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Zillow</a></div>'+
    '<div class="lbl">Edit details · added by '+esc(it.by||'?')+'</div><div class="edit"><input data-f="addr" value="'+esc(it.addr)+'" placeholder="Address"><input data-f="zip" value="'+esc(it.zip)+'" placeholder="ZIP" inputmode="numeric"><input data-f="price" value="'+(it.price||'')+'" placeholder="Price" inputmode="numeric"></div>'+
-   '<div class="row"><button class="btn g" data-save style="flex:1">Save details</button>'+(kind==='list'?'<button class="btn g" data-discard>Discard</button>':'')+'<button class="btn r" data-del>Delete</button></div></div></div>'; }).join('');
-  if(kind==='list')initSort(); else if(sortable){sortable.destroy();sortable=null} }
+   '<div class="row"><button class="btn g" data-save style="flex:1">Save details</button>'+(kind==='list'?'<button class="btn g" data-discard>Discard</button>':'<button class="btn" data-restore>Restore to list</button>')+'<button class="btn r" data-del>Delete</button></div></div></div>'; }).join('');
+  initSort(kind); }
 let sortable;
-function initSort(){ if(sortable)sortable.destroy(); sortable=new Sortable($('#list'),{handle:'.handle',animation:150,ghostClass:'sortable-ghost',chosenClass:'sortable-chosen',
+function initSort(kind){ if(sortable)sortable.destroy(); sortable=new Sortable($('#list'),{handle:'.handle',animation:150,ghostClass:'sortable-ghost',chosenClass:'sortable-chosen',
   onStart(){dragging=true}, onEnd(e){ dragging=false; if(e.oldIndex===e.newIndex)return; const el=e.item, id=el.dataset.id, prev=el.previousElementSibling?el.previousElementSibling.dataset.id:null;
-   mutate(s=>{ const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); let j; if(prev){j=s.items.findIndex(x=>x.id===prev)+1}else{j=s.items.findIndex(x=>st(x)==='list'); if(j<0)j=s.items.length} s.items.splice(j,0,m); }); } }); }
+   mutate(s=>{ const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); let j; if(prev){j=s.items.findIndex(x=>x.id===prev)+1}else{j=s.items.findIndex(x=>st(x)===kind); if(j<0)j=s.items.length} s.items.splice(j,0,m); }); } }); }
 function setStatus(s,id,status){ const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); m.status=status; s.items.push(m); }
 $('#list').addEventListener('click',e=>{ const t=e.target; if(t.closest('[data-z]'))return; const el=t.closest('.item'); if(!el)return; const id=el.dataset.id, it=state.items.find(x=>x.id===id); if(!it)return;
   if(t.closest('[data-restore]')){ mutate(s=>setStatus(s,id,'list')); toast('Back on the list (bottom)'); return; }
