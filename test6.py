@@ -15,7 +15,7 @@ async def main():
         await ctx.add_init_script("localStorage.setItem('who','Tom');localStorage.setItem('view','list')")
         pg=await ctx.new_page(); pg.on("pageerror",lambda e:print("ERR",e))
         await pg.goto(sys.argv[1]); await pg.wait_for_selector('.item'); await pg.wait_for_timeout(1500)
-        print("bar heights",[round((await x.bounding_box())['height']) for x in await pg.locator('.item').all()][:4])
+        print("bar heights",[round((await x.bounding_box())['height']) for x in await pg.locator('.item').all()][:3])
         await pg.screenshot(path="/workspace/shots/s_list_notes.png")
         await pg.click('#burger'); await pg.click('[data-v=discard]'); await pg.wait_for_timeout(1000); await pg.screenshot(path="/workspace/shots/s_disc_notes.png")
         await b.close()
