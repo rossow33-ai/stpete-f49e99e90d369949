@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>St. Pete Shortlist</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#14202b;--mute:#6b7885;--acc:#0f766e;--line:#e3e8ed}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--acc);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;display:flex;align-items:center;gap:10px}
+header h1{font-size:18px;margin:0;flex:1}
+.sub{font-size:12px;opacity:.85;display:block;font-weight:400}
+.who{background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:16px;padding:7px 12px;font-size:14px}
+.add{background:#fff;color:var(--acc);border:0;border-radius:50%;width:38px;height:38px;font-size:26px;line-height:1;font-weight:600}
+#dot{width:9px;height:9px;border-radius:50%;background:#9ca3af}
+#dot.ok{background:#86efac}#dot.err{background:#fca5a5}
+#list{padding:10px 10px calc(40px + env(safe-area-inset-bottom))}
+.item{background:var(--card);border-radius:12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.08);overflow:hidden}
+.bar{display:flex;align-items:center;min-height:62px;padding:6px 0 6px 10px;gap:10px}
+.rank{width:26px;height:26px;border-radius:50%;background:#e6f4f2;color:var(--acc);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.main{flex:1;min-width:0;cursor:pointer}
+.addr{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:13px;color:var(--mute);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta a{color:var(--acc);font-weight:600;text-decoration:underline;padding:4px 0}
+.meta b{color:var(--ink)}
+.handle{width:56px;align-self:stretch;display:flex;align-items:center;justify-content:center;font-size:28px;color:#8a97a3;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;flex:none}
+.sortable-ghost{opacity:.35}
+.sortable-chosen{box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.detail{display:none;border-top:1px solid var(--line);padding:10px 12px 12px;background:#fafcfd}
+.item.open .detail{display:block}
+.note{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px;font-size:15px;white-space:pre-wrap;word-wrap:break-word}
+.note small{display:block;color:var(--mute);font-size:11px;margin-top:3px}
+.note small button{border:0;background:none;color:#b91c1c;font-size:11px;padding:0 0 0 8px}
+.note.realtor{border-left:3px solid #d97706}.note.tom{border-left:3px solid var(--acc)}
+.row{display:flex;gap:8px;margin-top:6px}
+textarea,input{width:100%;font:inherit;padding:9px 10px;border:1px solid #cfd7de;border-radius:10px;background:#fff}
+textarea{min-height:44px;resize:vertical}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-size:15px;font-weight:600;background:var(--acc);color:#fff;white-space:nowrap}
+.btn.g{background:#e6ebef;color:var(--ink)}.btn.r{background:#fee2e2;color:#b91c1c}
+.edit{display:grid;grid-template-columns:1fr 90px 110px;gap:6px;margin-top:10px}
+.lbl{font-size:12px;color:var(--mute);margin:10px 0 4px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.modal.show{display:flex}
+.sheet{background:#fff;width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.sheet h2{margin:0 0 10px;font-size:18px}
+.sheet input{margin-bottom:8px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#14202b;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;display:none;z-index:30;gap:12px;align-items:center}
+#toast button{background:none;border:0;color:#7dd3c8;font-weight:700;font-size:14px}
+.empty{text-align:center;color:var(--mute);padding:40px}
+@media(min-width:700px){#list,header{max-width:640px;margin-left:auto;margin-right:auto}}
+</style></head><body>
+<header><div id="dot"></div><h1>St. Pete Shortlist<span class="sub">Ranked best to worst · miles from Central Ave</span></h1><button class="who" id="who">…</button><button class="add" id="addBtn" aria-label="Add property">+</button></header>
+<div id="list"></div>
+
+<div class="modal" id="addM"><div class="sheet">
+<h2>Add property</h2>
+<input id="aMls" placeholder="MLS number (e.g. TB8557907)" autocapitalize="characters" autocomplete="off">
+<input id="aAddr" placeholder="Street address (e.g. 123 4th Ave S)" autocomplete="off">
+<div class="row" style="margin-top:0"><input id="aZip" placeholder="ZIP" inputmode="numeric" style="flex:1"><input id="aPrice" placeholder="Price" inputmode="numeric" style="flex:1.4"></div>
+<div class="lbl">Address and price are optional. Add them later by tapping the property and editing. Miles are worked out from the address.</div>
+<div class="row"><button class="btn g" id="aCancel" style="flex:1">Cancel</button><button class="btn" id="aSave" style="flex:2">Add to list</button></div>
+</div></div>
+
+<div class="modal" id="whoM"><div class="sheet">
+<h2>Who's this?</h2>
+<div class="lbl" style="margin-top:0">Shown next to what you add and the notes you write.</div>
+<div class="row"><button class="btn" data-w="Tom" style="flex:1">Tom</button><button class="btn" data-w="Realtor" style="flex:1;background:#d97706">Realtor</button></div>
+</div></div>
+<div id="toast"><span id="tmsg"></span><button id="tundo">Undo</button></div>
+
+<script src="Sortable.min.js"></script>
+<script>
+const BIN="https://extendsclass.com/api/json-storage/bin/eaafacd";
+const $=s=>document.querySelector(s);
+let state={items:[]}, open=new Set(), me=localStorage.getItem('who')||'', dragging=false, lastJson='';
+const CA={lat:27.7709,w:-82.75,e:-82.63};
+function miles(lat,lon){ if(lat==null)return null; const lo=Math.min(Math.max(lon,CA.w),CA.e);
+  const dy=(lat-CA.lat)*69.0, dx=(lon-lo)*69.17*Math.cos(lat*Math.PI/180); return Math.round(Math.hypot(dx,dy)*10)/10; }
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=p=>p?'$'+Number(p).toLocaleString('en-US'):'price ?';
+function zurl(it){ if(it.addr){ const a=(it.addr+' Saint Petersburg FL '+(it.zip||'')).trim().replace(/[^A-Za-z0-9 ]/g,'').replace(/\s+/g,'-');
+  return 'https://www.zillow.com/homes/'+a+'_rb/'; } return 'https://www.zillow.com/homes/'+encodeURIComponent(it.mls)+'_rb/'; }
+function setDot(c){$('#dot').className=c}
+// ---- shared storage (read-modify-write so two people's edits merge) ----
+async function pull(){ const r=await fetch(BIN+'?_='+Date.now(),{cache:'no-store'}); if(!r.ok)throw 0; const t=await r.text(); return JSON.parse(t); }
+async function push(s){ const r=await fetch(BIN,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(s)}); if(!r.ok)throw 0; }
+let chain=Promise.resolve();
+function mutate(fn){ chain=chain.then(async()=>{ try{ const s=await pull(); if(!s.items)s.items=[]; fn(s); await push(s); state=s; localStorage.setItem('cache',JSON.stringify(s)); setDot('ok'); render(); }catch(e){ setDot('err'); toast('Could not save. Check connection.'); } }); return chain; }
+async function refresh(){ if(dragging||document.querySelector('.modal.show'))return; const ae=document.activeElement; if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT')&&ae.value)return;
+  try{ const s=await pull(); setDot('ok'); const j=JSON.stringify(s); if(j!==lastJson){ state=s; localStorage.setItem('cache',j); render(); } }catch(e){ setDot('err'); } }
+// ---- render ----
+function render(){ lastJson=JSON.stringify(state); const L=$('#list');
+  if(!state.items.length){L.innerHTML='<div class="empty">No properties yet. Tap + to add one.</div>';return}
+  L.innerHTML=state.items.map((it,i)=>{ const mi=miles(it.lat,it.lon);
+   const notes=(it.notes||[]).map((n,k)=>'<div class="note '+(n.by==='Realtor'?'realtor':'tom')+'">'+esc(n.text)+'<small>'+esc(n.by)+(n.ts?' · '+new Date(n.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'')+(n.by===me?'<button data-del-note="'+k+'">remove</button>':'')+'</small></div>').join('');
+   return '<div class="item'+(open.has(it.id)?' open':'')+'" data-id="'+esc(it.id)+'"><div class="bar"><div class="rank">'+(i+1)+'</div><div class="main"><div class="addr">'+esc(it.addr||'Address not added')+'</div><div class="meta"><a href="'+zurl(it)+'" target="_blank" rel="noopener" data-z>'+esc(it.mls)+'</a> · <b>'+money(it.price)+'</b> · '+(mi==null?'? mi':mi.toFixed(1)+' mi')+'</div></div><div class="handle" aria-label="Drag to reorder">&#9776;</div></div>'+
+   '<div class="detail">'+notes+'<textarea placeholder="Add a note as '+esc(me||'…')+'"></textarea><div class="row"><button class="btn" data-add-note style="flex:1">Add note</button><a class="btn g" href="'+zurl(it)+'" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">Zillow</a></div>'+
+   '<div class="lbl">Edit details · added by '+esc(it.by||'?')+'</div><div class="edit"><input data-f="addr" value="'+esc(it.addr)+'" placeholder="Address"><input data-f="zip" value="'+esc(it.zip)+'" placeholder="ZIP" inputmode="numeric"><input data-f="price" value="'+(it.price||'')+'" placeholder="Price" inputmode="numeric"></div>'+
+   '<div class="row"><button class="btn g" data-save style="flex:1">Save details</button><button class="btn r" data-del>Delete</button></div></div></div>'; }).join('');
+  initSort(); }
+let sortable;
+function initSort(){ if(sortable)sortable.destroy(); sortable=new Sortable($('#list'),{handle:'.handle',animation:150,delay:0,forceFallback:false,ghostClass:'sortable-ghost',chosenClass:'sortable-chosen',
+  onStart(){dragging=true}, onEnd(e){ dragging=false; if(e.oldIndex===e.newIndex)return; const el=e.item, id=el.dataset.id, prev=el.previousElementSibling?el.previousElementSibling.dataset.id:null;
+   const ids=[...document.querySelectorAll('.item')].map(x=>x.dataset.id); state.items.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id)); render();
+   mutate(s=>{ const i=s.items.findIndex(x=>x.id===id); if(i<0)return; const [m]=s.items.splice(i,1); let j=prev?s.items.findIndex(x=>x.id===prev)+1:0; s.items.splice(j,0,m); }); } }); }
+// ---- interactions ----
+$('#list').addEventListener('click',e=>{ const t=e.target; if(t.closest('[data-z]'))return; const el=t.closest('.item'); if(!el)return; const id=el.dataset.id, it=state.items.find(x=>x.id===id);
+  if(t.closest('[data-add-note]')){ const ta=el.querySelector('textarea'); const v=ta.value.trim(); if(!v)return; ta.value=''; const note={by:me,text:v,ts:Date.now()}; open.add(id); mutate(s=>{const x=s.items.find(z=>z.id===id); if(x){(x.notes=x.notes||[]).push(note)}}); return; }
+  if(t.closest('[data-del-note]')){ const k=+t.closest('[data-del-note]').dataset.delNote, n=it.notes[k]; mutate(s=>{const x=s.items.find(z=>z.id===id); if(x)x.notes=(x.notes||[]).filter(q=>!(q.ts===n.ts&&q.text===n.text&&q.by===n.by))}); return; }
+  if(t.closest('[data-del]')){ if(!confirm('Delete '+(it.addr||it.mls)+'?'))return; const idx=state.items.indexOf(it), copy=JSON.parse(JSON.stringify(it)); mutate(s=>{s.items=s.items.filter(z=>z.id!==id)}); toast('Deleted',()=>mutate(s=>{ if(!s.items.some(z=>z.id===id)) s.items.splice(Math.min(idx,s.items.length),0,copy)})); return; }
+  if(t.closest('[data-save]')){ const g=f=>el.querySelector('[data-f='+f+']').value.trim(); const addr=g('addr'),zip=g('zip'),price=parseInt(g('price').replace(/\D/g,''))||null; saveDetails(id,addr,zip,price); return; }
+  if(t.closest('.main')){ open.has(id)?open.delete(id):open.add(id); el.classList.toggle('open'); } });
+async function geocode(addr,zip){ if(!addr)return null; try{ const q=encodeURIComponent(addr+', Saint Petersburg, FL '+(zip||'')); const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q='+q); const j=await r.json(); if(j[0])return{lat:+j[0].lat,lon:+j[0].lon}; }catch(e){} return null; }
+async function saveDetails(id,addr,zip,price){ const cur=state.items.find(x=>x.id===id); let c=null; if(addr&&(addr!==cur.addr||zip!==cur.zip||cur.lat==null)){ toast('Finding location…'); c=await geocode(addr,zip); if(!c)toast('Saved, but could not locate address for miles'); }
+  mutate(s=>{const x=s.items.find(z=>z.id===id); if(!x)return; x.addr=addr; x.zip=zip; x.price=price; if(c){x.lat=c.lat;x.lon=c.lon} }); }
+$('#addBtn').onclick=()=>{ ['aMls','aAddr','aZip','aPrice'].forEach(i=>$('#'+i).value=''); $('#addM').classList.add('show'); setTimeout(()=>$('#aMls').focus(),50); };
+$('#aCancel').onclick=()=>$('#addM').classList.remove('show');
+$('#addM').onclick=e=>{ if(e.target.id==='addM')$('#addM').classList.remove('show') };
+$('#aSave').onclick=async()=>{ const mls=$('#aMls').value.trim().toUpperCase().replace(/\s+/g,''); if(!mls){$('#aMls').focus();return}
+  if(state.items.some(x=>x.mls===mls)){toast('Already on the list');return}
+  const addr=$('#aAddr').value.trim(), zip=$('#aZip').value.trim(), price=parseInt($('#aPrice').value.replace(/\D/g,''))||null;
+  $('#aSave').disabled=true; const c=await geocode(addr,zip); $('#aSave').disabled=false; $('#addM').classList.remove('show');
+  const it={id:mls+'-'+Math.random().toString(36).slice(2,6),mls,addr,zip,price,lat:c?c.lat:null,lon:c?c.lon:null,by:me,notes:[]};
+  open.add(it.id); await mutate(s=>{ if(!s.items.some(x=>x.mls===mls)) s.items.push(it) }); if(addr&&!c)toast('Added. Could not locate address for miles.'); setTimeout(()=>{const el=document.querySelector('[data-id="'+it.id+'"]'); el&&el.scrollIntoView({behavior:'smooth',block:'center'})},100); };
+function setWho(w){ me=w; localStorage.setItem('who',w); $('#who').textContent=w; $('#whoM').classList.remove('show'); render(); refresh(); }
+$('#who').onclick=()=>$('#whoM').classList.add('show');
+document.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>setWho(b.dataset.w));
+let tt,undoFn; function toast(m,undo){ $('#tmsg').textContent=m; undoFn=undo; $('#tundo').style.display=undo?'':'none'; $('#toast').style.display='flex'; clearTimeout(tt); tt=setTimeout(()=>$('#toast').style.display='none',undo?6000:2500); }
+$('#tundo').onclick=()=>{ $('#toast').style.display='none'; undoFn&&undoFn(); };
+// ---- boot ----
+try{ const c=JSON.parse(localStorage.getItem('cache')||'null'); if(c)state=c }catch(e){}
+$('#who').textContent=me||'Who?'; if(!me)$('#whoM').classList.add('show'); render(); refresh();
+setInterval(refresh,6000); document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()}); window.addEventListener('focus',refresh);
+</script></body></html>
