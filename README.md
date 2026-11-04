@@ -50,8 +50,8 @@ Photo/price/sqft can come from the listing page (the app gets photos via `https:
 
 ## RULES: never touch the production data
 
-- **NEVER reset, reseed or overwrite the shared data when updating the app.** Deploys change code only (\`index.html\`); the data lives in textdb.dev and is not part of the repo. The app contains no seed data and never writes on load; it writes only when a user edits something, and it always re-reads the latest data first, so it can never replace the list with an old copy.
-- **Do not run tests against the production key.** Use the mock in \`test6.py\` (browser requests to textdb.dev are intercepted and answered from an in-memory copy, so nothing is written), or a separate throwaway key.
-- Before any deploy, back up the live data: \`curl -s "https://textdb.dev/api/data/\$(cat tdkey.txt)?_=\$RANDOM" -o backup-\$(date +%Y%m%d-%H%M%S).json\` (backups are also kept in /workspace/stpete-backups/).
+- **NEVER reset, reseed or overwrite the shared data when updating the app.** Deploys change code only (`index.html`); the data lives in textdb.dev and is not part of the repo. The app contains no seed data and never writes on load; it writes only when a user edits something, and it always re-reads the latest data first, so it can never replace the list with an old copy.
+- **Do not run tests against the production key.** Use the mock in `test6.py` (browser requests to textdb.dev are intercepted and answered from an in-memory copy, so nothing is written), or a separate throwaway key.
+- Before any deploy, back up the live data: `curl -s "https://textdb.dev/api/data/\$(cat tdkey.txt)?_=\$RANDOM" -o backup-\$(date +%Y%m%d-%H%M%S).json` (backups are also kept in /workspace/stpete-backups/).
 - To change data (e.g. a daily job adding listings) do a read-modify-write that keeps every existing item, status, order and note exactly as is. Never POST a snapshot file.
-- A backup of the live state is \`backup-*.json\` in this folder; to restore, POST it back only if the user explicitly asks.
+- A backup of the live state is `backup-*.json` in this folder; to restore, POST it back only if the user explicitly asks.
