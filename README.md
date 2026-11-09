@@ -64,3 +64,20 @@ An item shows an amber **New listing** badge (Realtinder card, and a small one o
 - `isNew: true` is set on the item (set `isNew:false` or delete it to clear), OR
 - `listedDate` is an ISO date string (e.g. `"2026-11-04"`) within the last 7 days.
 Items without either field are never flagged (all existing items are unflagged). The app only reads these fields; it never writes them. The daily routine should set `isNew:true` (and optionally `listedDate`) when it prepends a new listing.
+
+## Taste game (≡ → Taste game)
+A photo-swipe game that learns Tom's style and ranks homes by it. Files: `taste.js` (code), `taste.json` (photos + tags, prebuilt; the app never tags at runtime), `taste_summary.py` (read-only exporter → `taste-summary.md`).
+
+- **Photos** (`taste.json` → `photos[]`): `{id, mls, url, tags}`. 136 photos from 63 listings (Zillow listing galleries: the homes in the app plus 18 other active south-side listings in `extra[]`), tagged by hand. Tags: `room` (ext|entry|kit|liv|din|bed|garage|yard|pool), `warmth` (warm|cool), `style` (modern|traditional), `open` (bool), `ext` (ranch|new|bung|mcm), `pool`, `yard` (big|small), `garage`, `hood` (neighborhood bucket from lat/lon).
+- **extra[]**: other active listings `{id,mls,addr,zip,price,sqft,lat,lon,img,hood,built}` that appear in *Best matches* with an "Add to Realtinder" button.
+- **Game data lives in a SEPARATE textdb key: `<KEY>-taste`** (KEY from `tdkey.txt`, i.e. `https://textdb.dev/api/data/<KEY>-taste`) plus localStorage `taste`. Format:
+  ```json
+  {"v":1,"people":{"Tom":{"swipes":[{"p":"p042","d":1,"ts":1762650000000}],"duels":[{"w":"p012","l":"p006","ts":...,"n":7}],"undone":[ts,...]}},
+   "scores":{"Tom":{"warmth:warm":0.71,"ext:ranch":0.42,"warmth:cool":-0.58,"hood:Pinellas Point / Skyway":0.2}},"updated":<epoch ms>}
+  ```
+  `d` = 1 love / -1 nope. `scores[person][feature]` is in -1..1: `(pos-neg)/(pos+neg+2)` over the features of loved vs noped photos (this-or-that picks count 1.5 for the features that differ). Feature names: `warmth:warm|cool`, `style:modern|traditional`, `open|closed`, `ext:ranch|new|bung|mcm`, `pool`, `yard:big|small`, `garage`, `hood:<name>`.
+  The game writes this key (read-merge-write, union of swipes) and nothing else.
+- **Main shared data is written ONLY when Tom taps "Add to Realtinder"** on a Best-matches card: it prepends that one listing (`by:"Bot"`, `status:"queue"`, one Bot note with the match %) through the normal `mutate()` read-modify-write. Homes already in List/Realtinder just show "List #n" / "In Realtinder".
+- **Daily routine**: GET `<KEY>-taste`, read `scores.Tom`, and rank/describe new listings with it (e.g. prefer features with score ≥ 0.2, avoid ≤ -0.2; `python3 taste_summary.py` prints a readable summary and writes `taste-summary.md`). Never POST to the taste key from a job.
+- Tests: `test_taste.py <url> <tag>` mocks both keys (main copy from the latest `/workspace/stpete-backups/backup-*-pretaste.json`), plays the game, and asserts no main write except the explicit add.
+- Rebuild photos/tags: tooling in `/workspace/taste/` (`fetch.py`, `extract.py`, `tags.txt`, `build.py`).

@@ -100,7 +100,39 @@ textarea{min-height:44px;resize:vertical}
 .acts button{width:68px;height:68px;border-radius:50%;border:0;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.2);font-size:30px}
 .acts .no{color:#dc2626}.acts .yes{color:#16a34a}
 .cnt{text-align:center;color:var(--mute);font-size:13px;padding-top:8px}
-@media(min-width:700px){#list,header,#tinder{max-width:640px;margin-left:auto;margin-right:auto}}
+@media(min-width:700px){#list,header,#tinder,#taste{max-width:640px;margin-left:auto;margin-right:auto}}
+/* Taste game */
+#taste{display:none;flex-direction:column;height:calc(100dvh - 60px - env(safe-area-inset-top));padding:8px 12px calc(10px + env(safe-area-inset-bottom))}
+.tabs{display:flex;background:#e6ebef;border-radius:12px;padding:3px;gap:3px;flex:none}
+.tabs button{flex:1;border:0;background:none;border-radius:9px;padding:8px 4px;font-size:14px;font-weight:600;color:var(--mute)}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tprog{flex:none;margin:8px 2px 4px;font-size:12px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.tprog .tb{flex:1;height:8px;border-radius:6px;background:#e3e8ed;overflow:hidden}.tprog .tb i{display:block;height:100%;background:linear-gradient(90deg,#f472b6,#ec4899);border-radius:6px;transition:width .3s}
+.tstyle{flex:none;font-size:12.5px;line-height:1.3;color:#33424f;background:#fdf2f8;border:1px solid #fbcfe8;border-radius:10px;padding:6px 9px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tstyle b{color:#be185d}
+.tdeck{position:relative;flex:1;min-height:260px}
+.pc{position:absolute;inset:0;border-radius:20px;overflow:hidden;background:#cfd8de center/cover no-repeat;box-shadow:0 6px 22px rgba(0,0,0,.2);touch-action:pan-y;user-select:none;-webkit-user-select:none;will-change:transform}
+.pc.back{transform:scale(.95) translateY(10px);opacity:.6;pointer-events:none}
+.pc .cap{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:600;border-radius:999px;padding:5px 10px;max-width:calc(100% - 20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc .stamp{top:20px}
+.tacts{flex:none;display:flex;justify-content:center;align-items:center;gap:28px;padding-top:12px}
+.tacts button{width:66px;height:66px;border-radius:50%;border:0;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.2);font-size:30px}
+.tacts .no{color:#dc2626}.tacts .yes{color:#ec4899}.tacts .un{width:46px;height:46px;font-size:20px;color:var(--mute)}
+.duel{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0}
+.duel h3{margin:0;text-align:center;font-size:17px}.duel h3 small{display:block;font-size:12px;color:var(--mute);font-weight:500}
+.duel button{flex:1;border:0;border-radius:16px;background:#cfd8de center/cover no-repeat;position:relative;box-shadow:0 3px 12px rgba(0,0,0,.18);min-height:0;padding:0}
+.duel button:active{transform:scale(.98)}.duel button.win{outline:4px solid #ec4899}
+.duel .or{flex:none;text-align:center;font-weight:800;color:#be185d;font-size:13px;margin:-4px 0}
+.tscroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;margin:8px -12px 0;padding:0 12px 20px}
+.scard{background:#fff;border-radius:16px;padding:14px 14px 12px;box-shadow:0 1px 3px rgba(0,0,0,.1);margin-bottom:10px}
+.scard h2{margin:0 0 4px;font-size:19px}.scard .lbl{margin:10px 0 6px}
+.chip{display:inline-block;border-radius:999px;padding:5px 10px;margin:0 6px 6px 0;font-size:13.5px;font-weight:600}
+.chip.y{background:#fce7f3;color:#9d174d}.chip.n{background:#eef2f5;color:#53606b;text-decoration:line-through;text-decoration-color:rgba(83,96,107,.5)}
+.sbar{display:flex;align-items:center;gap:8px;font-size:13px;margin:5px 0}.sbar span{width:140px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sbar .t{flex:1;height:8px;background:#eef2f5;border-radius:5px;position:relative}.sbar .t i{position:absolute;top:0;bottom:0;border-radius:5px}
+.mt{display:inline-block;background:#fce7f3;color:#be185d;font-weight:800;font-size:11px;border-radius:8px;padding:2px 7px;margin-right:6px;vertical-align:1px}
+.why{font-size:11.5px;color:#9d174d;margin-top:4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.tadd{width:66px;align-self:stretch;border:0;background:none;color:#ec4899;font-size:12px;font-weight:700;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 4px}.tadd b{font-size:24px;line-height:1}.tadd[disabled]{color:var(--mute);font-weight:600}
+#styleM .sheet{max-height:86dvh;overflow:auto}
 </style></head><body>
 <header><button class="burger" id="burger" aria-label="Menu">&#9776;<i id="qBadge" style="display:none"></i></button><img class="logo" src="icons/icon-192.png" alt="" width="34" height="34"><h1 id="title">St. Pete Shortlist<span class="sub" id="sub"></span></h1><div id="dot"></div><button class="who" id="who">…</button></header>
 <div id="scrim"></div>
@@ -108,10 +140,13 @@ textarea{min-height:44px;resize:vertical}
  <button data-v="list">&#128203; List <span class="n" id="nList"></span></button>
  <button data-v="discard">&#128465; Discarded <span class="n" id="nDis"></span></button>
  <button data-v="tinder">&#128149; Realtinder <span class="n" id="nQ"></span></button>
+ <button data-v="taste">&#129449; Taste game <span class="n" id="nT"></span></button>
  <button data-v="add">&#43; Add MLS number</button>
 </div>
 <div id="list"></div>
 <div id="tinder"></div>
+<div id="taste"></div>
+<div class="modal" id="styleM"><div class="sheet"></div></div>
 
 <div class="modal" id="addM"><div class="sheet">
 <h2>Add property</h2>
@@ -130,6 +165,7 @@ textarea{min-height:44px;resize:vertical}
 <div id="toast"><span id="tmsg"></span><button id="tundo">Undo</button></div>
 
 <script src="Sortable.min.js"></script>
+<script src="taste.js" defer></script>
 <script>
 const BIN="https://textdb.dev/api/data/stpete-c486ca4ae51d637c";
 const $=s=>document.querySelector(s);
@@ -154,7 +190,7 @@ function mutate(fn){ try{fn(state)}catch(e){} render(); pending++;
 async function refresh(){ if(dragging||swiping||flinging||pending||document.querySelector('.modal.show:not(#notesM)'))return; const ae=document.activeElement; if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT')&&ae.value)return;
   try{ const s=await pull(); setDot('ok'); const j=JSON.stringify(s); if(j!==lastJson){ state=s; localStorage.setItem('cache',j); render(); } }catch(e){ setDot('err'); } }
 // ---- views ----
-const TITLES={list:'My Ranking',discard:'Discarded',tinder:'Realtinder'};
+const TITLES={list:'My Ranking',discard:'Discarded',tinder:'Realtinder',taste:'Taste game'};
 function render(){ lastJson=JSON.stringify(state); if(notesId)renderNotes();
   const c=k=>state.items.filter(i=>st(i)===k).length;
   $('#nList').textContent=c('list'); $('#nDis').textContent=c('discard'); $('#nQ').textContent=c('queue');
@@ -162,7 +198,8 @@ function render(){ lastJson=JSON.stringify(state); if(notesId)renderNotes();
   document.querySelectorAll('#menu button[data-v]').forEach(b=>b.classList.toggle('cur',b.dataset.v===view));
   $('#title').firstChild.textContent=TITLES[view]||'';
   $('#sub').textContent=view==='list'?'Drag ≡ to rank · tap a bar for notes':view==='discard'?'Drag ≡ to rank · tap a bar for notes':'Swipe right = list · left = discard';
-  $('#list').style.display=view==='tinder'?'none':''; $('#tinder').style.display=view==='tinder'?'flex':'none';
+  $('#list').style.display=(view==='tinder'||view==='taste')?'none':''; $('#tinder').style.display=view==='tinder'?'flex':'none'; $('#taste').style.display=view==='taste'?'flex':'none';
+  if(view==='taste'){ $('#sub').textContent='Swipe photos · I learn your style'; if(typeof tasteOnData==='function')tasteOnData(); return; }
   if(view==='tinder')renderTinder(); else renderList(view==='discard'?'discard':'list'); }
 function ppsf(it){ return it.price&&it.sqft?Math.round(it.price/it.sqft):null }
 function psfTxt(it){ const v=ppsf(it); return v?'$'+v.toLocaleString('en-US')+'/sf':'' }
